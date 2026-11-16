@@ -1,0 +1,217 @@
+:root {
+    --left: 1em;
+    --right: 8em;
+    --line: 0.3em;
+}
+
+@media (min-width: 1200px) {
+
+}
+
+@media (max-width: 1199px) {
+
+}
+
+body {
+    width: 64em;
+    margin: auto;
+    margin-top: 0.5em;
+    font-size: 12pt;
+    font-family: "Noto Sans", "Open Sans", Oxygen, sans-serif;
+}
+
+.material-symbols-outlined {font-size: 32px}
+input[type=date] {font-size: 16px}
+.Hidden {display: none}
+#OpenFile {margin-top: 3em}
+
+nav button.Modified {
+    background-color: #fff0;
+}
+
+nav.Modified button.Modified {
+    color: white;
+    background-color: red;
+}
+
+nav, #Dialogs > div > p.Buttons, #OpenFile {
+
+button {
+    margin: 3px;
+    border-radius: 5px;
+    border: 1px solid #fff0;
+}
+
+button:hover {
+    color: blue;
+    background-color: #e0e0ff;
+}
+
+}
+
+*:is(nav, #Dialogs > div > p.Buttons, #OpenFile) button:not(.Modified, :hover) {
+    background-color: #fff0;
+}
+
+#OpenFile button > *, #Dates * {vertical-align: middle}
+nav > *, nav > span *, p.Buttons > * {vertical-align: top}
+
+#Cover {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    backdrop-filter: blur(4px);
+    display: none;
+}
+
+#Dialogs > div {
+    font-size: 90%;
+    position: fixed;
+    top: 4em;
+    left: 2em;
+    max-width: 98%;
+    margin: auto;
+    padding: 0.5em;
+    border: 2px solid blue;
+    background-color: #f0f0ff;
+    display: none;
+}
+
+#Dialogs > div > h3 {
+    text-align: center;
+    margin-top: 0.25em;
+}
+
+#Dialogs > div > p.Buttons {
+    text-align: center;
+    margin-bottom: 0;
+}
+
+#Dialogs > div > p.Buttons > button, nav button {
+    width: 6em;
+    padding: 2px;
+    margin: 0.5em;
+}
+
+nav button {height: 6em}
+
+.em12 {width: 12em}
+.em16 {width: 16em}
+.em20 {width: 20em}
+.em24 {width: 24em}
+.em32 {width: 32em}
+.em48 {width: 48em}
+.Center {text-align: center}
+
+article {
+    padding: 0.25em;
+}
+
+span.Right {float: right}
+.Right:not(span) {text-align: right}
+.Red {color: red}
+
+.AcctLink, .NewAcct, #Ledger tr[data-index] {
+    cursor: pointer;
+    color: #0065fe;
+}
+
+article p {
+    margin-top: var(--line);
+    margin-bottom: var(--line);
+}
+
+article p:is(.Subtotal, .Total) {
+    margin-top: calc(2*var(--line));
+    padding-top: calc(2*var(--line));
+    font-weight: bold;
+}
+
+article p.Subtotal {
+    border-top: 1px solid black;
+}
+
+article p.Level1 {
+    margin-left: var(--left);
+    margin-right: var(--right);
+}
+
+article p.Level2 {
+    margin-left: calc(2 * var(--left));
+    margin-right: calc(2 * var(--right));
+}
+
+article p.Level3 {
+    margin-left: calc(3 * var(--left));
+    margin-right: calc(3 * var(--right));
+}
+
+article p.Level4 {
+    margin-left: calc(4 * var(--left));
+    margin-right: calc(4 * var(--right));
+}
+
+article p.Level5 {
+    margin-left: calc(5 * var(--left));
+    margin-right: calc(5 * var(--right));
+}
+
+article p.Level6 {
+    margin-left: calc(6 * var(--left));
+    margin-right: calc(6 * var(--right));
+}
+
+#Ledger > table {
+    width: 100%;
+    border-collapse: collapse;
+
+tbody tr:nth-child(even), thead tr {
+    background-color: lightgrey;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 2px;
+}
+
+}
+
+
+#Ledger > table td {
+    width: 18%;
+    text-align: right;
+}
+
+#Ledger > table td:nth-child(1) {
+    width: 12%;
+    text-align: center;
+}
+
+#Ledger > table td:nth-child(2) {
+    width: 50%;
+    text-align: left;
+}
+
+/* #EditTr {left: calc(50vw - 29em - 1px)} */
+
+#EditTr table {
+    border-collapse: collapse;
+    margin: auto;
+
+td, th {
+    border: 1px solid black;
+    padding: 2px;
+}
+
+td:not(:nth-child(1)) {
+    width: 14em;
+    text-align: right;
+}
+
+/* th:nth-child(1) {
+    width: 28em;
+} */
+
+}
