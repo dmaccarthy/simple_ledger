@@ -553,6 +553,8 @@ function open_file(fn) {
     reader.readAsText(fn.files[0]); 
 }
 
+open_file.fname = "ledger";
+
 function init(csv) {
     $("#DateStart")[0].valueAsDate = new Date(date_str.month(-1));
     $("#DateEnd")[0].valueAsDate = new Date(date_str.month(0));
