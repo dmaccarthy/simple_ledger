@@ -264,15 +264,14 @@ print_accts.maxlevels = 6;
 print_accts.levels = print_accts.maxlevels;
 
 function income_statement() {
-    let [a, b] = calc_bal.dates;
-    let attr = {title: "New Account", "data-acct": 4};
+    let attr = {title: "New Sub-Account", "data-acct": 4};
     let amt = [-bal(4), bal(2)];
-    let inc = $("<section>").append($("<h2>").html("Income").addClass("NewAcct").attr(attr));
+    let inc = $("<section>").append($("<h2>").html($("<span>").html("Income").addClass("NewAcct").attr(attr)));
     print_accts(inc, tree[4], 0, true);
     inc.append($("<p>").addClass("Subtotal").html("Total Income").append(money(amt[0]).addClass("Right")));
 
     attr["data-acct"] = 2;
-    let exp = $("<section>").append($("<h2>").html("Expenses").addClass("NewAcct").attr(attr));
+    let exp = $("<section>").append($("<h2>").html($("<span>").html("Expenses").addClass("NewAcct").attr(attr)));
     print_accts(exp, tree[2], 0);
     exp.append($("<p>").addClass("Subtotal").html("Total Expenses").append(money(amt[1]).addClass("Right")));
 
@@ -282,15 +281,15 @@ function income_statement() {
 }
 
 function balance_sheet() {
-    let attr = {title: "New Account", "data-acct": 1};
+    let attr = {title: "New Sub-Account", "data-acct": 1};
     let amt = [bal(1), -bal(3), -bal(5)];
-
-    let asset = $("<section>").append($("<h2>").html("Assets").addClass("NewAcct").attr(attr));
+    
+    let asset = $("<section>").append($("<h2>").html($("<span>").html("Assets").addClass("NewAcct").attr(attr)));
     print_accts(asset, tree[1], 0);
     asset.append($("<p>").addClass("Subtotal").html("Total Assets").append(money(amt[0]).addClass("Right")));
 
     attr["data-acct"] = 3;
-    let liab = $("<section>").append($("<h2>").html("Liabilities").addClass("NewAcct").attr(attr));
+    let liab = $("<section>").append($("<h2>").html($("<span>").html("Liabilities").addClass("NewAcct").attr(attr)));
     print_accts(liab, tree[3], 0, true);
     liab.append($("<p>").addClass("Subtotal").html("Total Liabilities").append(money(amt[1]).addClass("Right")));
 
@@ -299,7 +298,7 @@ function balance_sheet() {
     amt_re = amt_eq - amt[2] - amt_net;
 
     attr["data-acct"] = 5;
-    let eq = $("<section>").append($("<h2>").html("Equity").addClass("NewAcct").attr(attr));
+    let eq = $("<section>").append($("<h2>").html($("<span>").html("Equity").addClass("NewAcct").attr(attr)));
     eq.append($("<p>").html("Net Income").append(money(amt_net).addClass("Right")));
     print_accts(eq, tree[5], 0, true);
     if (amt_re) eq.append($("<p>").html("Retained Earnings").append(money(amt_re).addClass("Right")));
@@ -461,7 +460,7 @@ edit_transaction.button = b => {
 }
 
 
-/*** ***/
+/*** Settings dialog ***/
 
 function settings() {
     $("#ReportLevel")[0].options.selectedIndex = print_accts.levels - 1;
@@ -530,7 +529,13 @@ function inc_st_click(ev) {
     if (ev.ctrlKey && ev.altKey) {
         let modified = $("nav").hasClass("Modified");
         if (modified) alert("Save changes before proceeding!");
-        else {
+        else if (confirm(`Save balances as of ${date_str(0, get_date("#DateEnd"))}?`)) {
+            console.log(acct);
+            for (let a in balances) {
+                let t = path(a)[0];
+                acct[a][2] = t == 2 || t == 4 ? 0 : balances[a];
+            }
+            ledger = [];
             calc_bal();
             alert("Ledger has been cleared!");
         }

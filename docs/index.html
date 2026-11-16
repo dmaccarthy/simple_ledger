@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Simple Ledgers</title>
+<title>Simple Ledger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="shortcut icon" type="image/svg+xml" href="favicon.svg" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
@@ -35,11 +35,10 @@
 <article id="IncomeStatement"></article>
 <article id="BalanceSheet"></article>
 <article id="Ledger"></article>
-<article id="OpenFile" class="Center">
-    <p>
+<article id="OpenFile">
+    <p class="Center">
         <input class="Hidden" type="file" accept=".csv" oninput="open_file(this)"/>
-        <button onclick="$('#OpenFile input').trigger('click')"><span class="material-symbols-outlined">file_open</span> &nbsp; <span>Import Ledgers File</span></button> &nbsp;
-        <button onclick="init()"><span class="material-symbols-outlined">add</span> &nbsp; Create New Ledgers</button>
+        <button onclick="$('#OpenFile input').trigger('click')"><span class="material-symbols-outlined">file_open</span> &nbsp; <span>Import Ledgers File</span></button><button onclick="init()"><span class="material-symbols-outlined">add</span> &nbsp; Create New Ledgers</button>
     </p>
 </article>
 <div id="Cover"></div>

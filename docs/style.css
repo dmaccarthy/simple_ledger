@@ -13,7 +13,7 @@
 }
 
 body {
-    width: 64em;
+    width: 1016px;
     margin: auto;
     margin-top: 0.5em;
     font-size: 12pt;
@@ -23,7 +23,11 @@ body {
 .material-symbols-outlined {font-size: 32px}
 input[type=date] {font-size: 16px}
 .Hidden {display: none}
-#OpenFile {margin-top: 3em}
+
+#OpenFile {
+    max-width: calc(100vw - 8px);
+    margin-top: 3em;
+}
 
 nav button.Modified {
     background-color: #fff0;
@@ -34,7 +38,7 @@ nav.Modified button.Modified {
     background-color: red;
 }
 
-nav, #Dialogs > div > p.Buttons, #OpenFile {
+nav, #Dialogs > div > p.Buttons {
 
 button {
     margin: 3px;
@@ -51,6 +55,13 @@ button:hover {
 
 *:is(nav, #Dialogs > div > p.Buttons, #OpenFile) button:not(.Modified, :hover) {
     background-color: #fff0;
+}
+
+#OpenFile button {
+    border-radius: 5px;
+    border: 1px solid #fff0;
+    width: 14.5em;
+    margin: 1em;
 }
 
 #OpenFile button > *, #Dates * {vertical-align: middle}
