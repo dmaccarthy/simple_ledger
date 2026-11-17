@@ -474,8 +474,8 @@ settings.button = () => {
     if (date != open_date) {
         open_date = date;
         calc_bal();
-        show();
     }
+    show();
     $("#Cover, #Settings ").hide();
 }
 

@@ -4,14 +4,9 @@
     --line: 0.3em;
 }
 
-/* @media (min-width: 1200px) {
-}
-
-@media (max-width: 1199px) {
-} */
-
 body {
-    max-width: 1016px;
+    min-width: 540px;
+    max-width: 1024px;
     margin: auto;
     margin-top: 0.5em;
     font-size: 12pt;
@@ -111,7 +106,7 @@ nav button {height: 6em}
 .Center {text-align: center}
 
 article {
-    padding: 0.25em;
+    padding: 0.5em;
 }
 
 span.Right {float: right}
@@ -214,9 +209,5 @@ td:not(:nth-child(1)) {
     width: 14em;
     text-align: right;
 }
-
-/* th:nth-child(1) {
-    width: 28em;
-} */
 
 }
