@@ -247,7 +247,7 @@ function bal(n) {
 
 function print_accts(e, accts, level, neg) {
     if (level >= print_accts.levels) return;
-    for (let a in accts) {
+    for (let a of print_accts.sort(accts)) {
         let s = $("<span>").html(short_name(a));
         // if (path(a)[0] != 5) {
             let [cls, title] = is_place_holder(a) ? ["NewAcct", "New Sub-Account [Click] or Edit Account [Ctrl+Click]"] :
@@ -262,6 +262,31 @@ function print_accts(e, accts, level, neg) {
 
 print_accts.maxlevels = 6;
 print_accts.levels = print_accts.maxlevels;
+
+print_accts.sort = accts => {
+    let sort_mode = parseInt($("#SortOrder")[0].options.selectedIndex);
+    let acct_nums = [];
+    for (let a in accts) acct_nums.push(parseInt(a));
+    let custom = acct_tree.custom;
+    let indx = a => {
+        a = custom.indexOf(a);
+        if (a == -1) a += custom.length;
+        return a;
+    }
+    acct_nums.sort((a, b) => {
+        if (sort_mode == 1) {
+            a = short_name(a).toUpperCase();
+            b = short_name(b).toUpperCase();
+        }
+        else if (sort_mode == 2) {
+            let a1 = indx(a);
+            let b1 = indx(b);
+            if (a1 != b1) [a, b] = [a1, b1]
+        }
+        return a < b ? -1 : 1;
+    });
+    return acct_nums;
+}
 
 function income_statement() {
     let attr = {title: "New Sub-Account", "data-acct": 4};
@@ -444,7 +469,7 @@ edit_transaction.button = b => {
                 let i = opt.selectedIndex;
                 if (amt) data.push([parseInt(opt[i].value), amt]);
             }
-            let date = get_date("#TrDate");
+            let date = date_str(0, get_date("#TrDate"));
             let descr = $("#TrDescr").val();
             let tr = {date: date, descr: descr, data: data}
             let i = edit_transaction.index;
@@ -483,7 +508,17 @@ settings.button = () => {
 /*** Import ***/
 
 function import_data(t) {
+    acct_tree.custom = [];
     t = t.split("****");
+    if (t.length > 3) {
+        let c = t[3].trim();
+        if (c.length) {
+            c = c.split(",");
+            for (let i=0; i<c.length; i++) c[i] = parseInt(c[i]);
+            acct_tree.custom = c;   
+        }
+    }
+    $("#SortOrder")[0].options.selectedIndex = acct_tree.custom.length ? 2 : 1;
     open_date = t[2].trim();
     for (let e of t[0].trim().split("\n")) {
         e = e.trim().split(",");

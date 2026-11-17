@@ -28,6 +28,9 @@ input[type=date] {font-size: 1em}
     margin-top: 3em;
 }
 
+#Settings input[type=date] {width: calc(12em - 20px)}
+#Settings select {width: 12em}
+
 nav:not(.Modified) #SaveBtn {color: lightgrey}
 nav:not(.Modified) #SaveBtn:hover {background-color: #fff0}
 nav.Modified #SaveBtn {color: red}
