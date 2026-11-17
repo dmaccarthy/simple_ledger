@@ -506,6 +506,7 @@ function import_data(t) {
 /*** Export ***/
 
 function export_data() {
+    if (!$("nav").hasClass("Modified")) return;
     let csv = "";
     for (let a in acct) {
         csv += `${a}`;

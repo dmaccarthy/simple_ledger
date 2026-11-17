@@ -1,19 +1,17 @@
 :root {
     --left: 1em;
-    --right: 8em;
+    --right: 7.25em;
     --line: 0.3em;
 }
 
-@media (min-width: 1200px) {
-
+/* @media (min-width: 1200px) {
 }
 
 @media (max-width: 1199px) {
-
-}
+} */
 
 body {
-    width: 1016px;
+    max-width: 1016px;
     margin: auto;
     margin-top: 0.5em;
     font-size: 12pt;
@@ -29,14 +27,10 @@ input[type=date] {font-size: 16px}
     margin-top: 3em;
 }
 
-nav button.Modified {
-    background-color: #fff0;
-}
-
-nav.Modified button.Modified {
-    color: white;
-    background-color: red;
-}
+nav:not(.Modified) #SaveBtn {color: lightgrey}
+nav:not(.Modified) #SaveBtn:hover {background-color: #fff0}
+nav.Modified #SaveBtn {color: red}
+nav.Modified #SaveBtn:hover {background-color: #e0e0ff}
 
 nav, #Dialogs > div > p.Buttons {
 
@@ -46,7 +40,7 @@ button {
     border: 1px solid #fff0;
 }
 
-button:hover {
+button:not(#SaveBtn):hover {
     color: blue;
     background-color: #e0e0ff;
 }
