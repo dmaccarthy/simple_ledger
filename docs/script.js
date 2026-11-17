@@ -1,6 +1,6 @@
 /***  Global variables ***/
 
-let acct = {}, ledger = [], tree, balances, open_date;
+let acct = {}, ledger = [], tree, balances, open_date, version = "0.1.0-dev";
 
 
 /*** Helper functions ***/
@@ -26,7 +26,7 @@ function show(n) {
     if (n == 0) income_statement();
     else if (n == 1) balance_sheet();
     $($("article").hide()[n]).show();
-    let [d, b] = [$("#Dates"), $("#NewBtn").closest("div")];
+    let [d, b] = [$("#Dates"), $("#NewBtn")];
     if (n < 2) {d.show(); b.hide()}
     else {d.hide(); b.show()}
 }
@@ -56,6 +56,7 @@ function get_date(sel) {
 /*** Account tree ***/
 
 function acct_tree() {
+    /* Make the account tree */
     tree = {1: {}, 2: {}, 3: {}, 4: {}, 5: {}};
     for (let i in tree) sub_acct(tree, i);
 }
@@ -69,6 +70,53 @@ function sub_acct(obj, par) {
     for (let s in sub) sub_acct(sub, s);
 }
 
+acct_tree.custom_sort = (data) => {
+    /* Sort the accounts */
+    let s = 0;
+    acct_tree.custom = {};
+    acct_tree.custom_sort.raw = data;
+    data = data.trim().split('\n');
+    for (let i=0;i<data.length;i++) if (data[i].length) {
+        let info = data[i].split(',');
+        let arr = acct_tree.custom[info[0]] = info.slice(1);
+        for (let j=0;j<arr.length;j++) arr[j] = parseInt(arr[j]);
+        s = 2;
+    }
+    let sel = $("#SortOrder");
+    if (s == 2) for (let c in acct_tree.custom) sel.append($("<option>").html(c));
+    sel[0].options.selectedIndex = s;
+}
+
+function acct_select(filter) {
+    /* Create a <select> with the account list */
+    let list = filter === false ? [[1], [2], [4], [5], [3]] : [[], [], [], [], []];
+    if (filter == null) filter = a => !is_place_holder(a);
+    else if (filter === false) filter = a => is_place_holder(a);
+    else if (filter === true) filter = a => true;
+    for (let a in acct) if (filter(a)) {
+        list[path(a)[0] - 1].push(parseInt(a));
+    }
+    for (let l of list) {
+        l.sort((a, b) => {
+            a = full_name(a).toUpperCase();
+            b = full_name(b).toUpperCase();
+            return a < b ? -1 : 1;
+        });
+    }
+    list = [...list[0], ...list[1], ...list[3], ...list[4], ...list[2]];
+    let sel = $("<select>");
+    for (let a of list) sel.append($("<option>").attr("value", a).html(full_name(a)));
+    return sel.appendTo("body");
+}
+
+acct_select.set_val = (sel, a) => {
+    /* Set selectedIndex by matching <option> value attribute */
+    let opt = $(sel)[0].options;
+    for (let i=0; i<opt.length; i++) {
+        if (opt[i].value == a) opt.selectedIndex = i;
+    }
+    return opt.selectedIndex;
+}
 
 /*** Account info ***/
 
@@ -101,11 +149,21 @@ function children(n) {
 }
 
 function is_place_holder(a) {return acct[a].length < 3}
-function is_debit(a) {return path(a)[0] < 3}
+
+function is_debit(a) {
+    let p = path(a)[0];
+    return p == 1 || p == 5;
+}
 
 function short_name(n) {
-    return n > 5 ? acct[n][0] : ["Assets", "Expenses", "Liabilities", "Income", "Equity"][n - 1];
+    return n > 5 ? acct[n][0] : ["Assets", "Liabilities", "Equity", "Income", "Expenses"][n - 1];
 } 
+
+function display_name(n) {
+    let d = ($("#ShowAcctNum")[0].checked) ? `${n}: ` : '';
+    if (d.length > 5) d = d.substring(0, 3) + '-' + d.substring(3);
+    return d + short_name(n);
+}
 
 function full_name(a) {
     let f = "";
@@ -117,6 +175,7 @@ function full_name(a) {
 }
 
 function can_delete(a) {
+    /* Check whether an account can be deleted */
     if (is_place_holder(a)) return children(a).length == 0;
     for (let t of ledger) for (let [n, v] of t.data) {
         if (n == a) return false;
@@ -125,9 +184,11 @@ function can_delete(a) {
 }
 
 function edit_acct(a, is_new) {
+    /* Run the New/Edit Account dialog */
+    a = parseInt(a);
     let p = a, ph;
     if (is_new) {
-        a = a < 100 ? 100 * a : a + 1;
+        a = 100 * a + 1;
         while (acct[a] != null) a++;
         ph = false;
     }
@@ -141,6 +202,7 @@ function edit_acct(a, is_new) {
     let sel = acct_select(false);
     $("#ParentAcct").html(sel);
     acct_select.set_val(sel, p);
+    $("#AcctNum").val(a);
     $("#AcctName").val(is_new ? "" : acct[a][0]);
     $("#OpenBal").val(is_new || ph ? 0 : Math.round(acct[a][2] / 100, 2));
     let check = $("#PH")[0];
@@ -158,8 +220,22 @@ edit_acct.toggle = e => {
 
 }
 
+edit_acct.renumber = (aold, anew) => {
+    /* Renumber an account */
+    if (acct[anew]) throw(`account ${anew} already exists`);
+    acct[anew] = acct[aold];
+    delete acct[aold];
+    for (let t in acct) if (t != anew) {
+        t = acct[t];
+        if (t[1] == aold) t[1] = anew;
+    }
+    for (let t of ledger) for (let d of t.data) {
+        if (d[0] == aold) d[0] = anew;
+    }
+}
+
 edit_acct.button = btn => {
-    $("#Cover, #NewAcct ").hide();
+    /* Handle button clicks in New/Edit Account dialog */
     if (btn) {
         let [a, p] = edit_acct.nums;
         let aname = safe_str($("#AcctName").val());
@@ -167,6 +243,15 @@ edit_acct.button = btn => {
         let par = $("#ParentAcct").find("select")[0].options;
         par = parseInt(par[par.selectedIndex].value);
         if (par == a) par = p;
+        let anum = parseInt($("#AcctNum").val());
+        if (anum != a) {
+            if (isNaN(anum) || acct[anum] || anum < 100) {
+                alert("Account number is not valid or is already in use!");
+                return;
+            }
+            edit_acct.renumber(a, anum);
+            a = anum;
+        }
         let data = [aname, par];
         let has_bal = !$("#PH")[0].checked;
         if (has_bal) data.push(Math.round(100 * parseFloat($("#OpenBal").val())));
@@ -176,42 +261,14 @@ edit_acct.button = btn => {
         calc_bal();
         show();
     }
+    $("#Cover, #NewAcct").hide();
 }
 
-function acct_select(filter) {
-    /* Create a <select> with the account list */
-    let list = filter === false ? [[1], [3], [4], [2], [5]] : [[], [], [], [], []];
-    if (filter == null) filter = a => !is_place_holder(a);
-    else if (filter === false) filter = a => is_place_holder(a);
-    else if (filter === true) filter = a => true;
-    for (let a in acct) if (filter(a)) {
-        list[path(a)[0] - 1].push(parseInt(a));
-    }
-    for (let l of list) {
-        l.sort((a, b) => {
-            a = full_name(a).toUpperCase();
-            b = full_name(b).toUpperCase();
-            return a < b ? -1 : 1;
-        });
-    }
-    list = [...list[0], ...list[2], ...list[3], ...list[1], ...list[4]];
-    let sel = $("<select>");
-    for (let a of list) sel.append($("<option>").attr("value", a).html(full_name(a)));
-    return sel.appendTo("body");
-}
-
-acct_select.set_val = (sel, a) => {
-    /*** Set selectedIndex by matching <option> value attribute***/
-    let opt = $(sel)[0].options;
-    for (let i=0; i<opt.length; i++) {
-        if (opt[i].value == a) opt.selectedIndex = i;
-    }
-    return opt.selectedIndex;
-}
 
 /*** Balance calculation ***/
 
 function calc_bal(unmodified) {
+    /* Calculate balances for all non-placeholder accounts */
     if (!unmodified) $("nav").addClass("Modified");
     let start = get_date("#DateStart");
     let end = get_date("#DateEnd");
@@ -234,6 +291,7 @@ function calc_bal(unmodified) {
 }
 
 function bal(n) {
+    /* Calculate the balance for the specified account number */
     if (balances[n] != null) return balances[n];
     else {
         let b = 0;
@@ -246,10 +304,11 @@ function bal(n) {
 /*** Income Statement and Balance Sheet ***/
 
 function print_accts(e, accts, level, neg) {
+    /* Print the sub-accounts of a single placeholder */
     if (level >= print_accts.levels) return;
     for (let a of print_accts.sort(accts)) {
-        let s = $("<span>").html(short_name(a));
-        // if (path(a)[0] != 5) {
+        let s = $("<span>").html(display_name(a));
+        // if (path(a)[0] != 3) {
             let [cls, title] = is_place_holder(a) ? ["NewAcct", "New Sub-Account [Click] or Edit Account [Ctrl+Click]"] :
                 ["AcctLink", "Open Ledger [Click] or Edit Account [Ctrl+Click]"];
             // if (cls == "AcctLink" || path(a).length <= print_accts.maxlevels)
@@ -264,13 +323,19 @@ print_accts.maxlevels = 6;
 print_accts.levels = print_accts.maxlevels;
 
 print_accts.sort = accts => {
-    let sort_mode = parseInt($("#SortOrder")[0].options.selectedIndex);
+    /* Sort the accounts according to the Settings dialog */
+    let custom;
+    let opt = $("#SortOrder")[0].options;
+    let sort_mode = parseInt(opt.selectedIndex);
+    if (sort_mode > 1) {
+        sort_mode = $(opt[sort_mode]).html();
+        custom = acct_tree.custom[sort_mode];
+    }
     let acct_nums = [];
     for (let a in accts) acct_nums.push(parseInt(a));
-    let custom = acct_tree.custom;
     let indx = a => {
         a = custom.indexOf(a);
-        if (a == -1) a += custom.length;
+        if (a == -1) a += custom.length + 1;
         return a;
     }
     acct_nums.sort((a, b) => {
@@ -278,7 +343,7 @@ print_accts.sort = accts => {
             a = short_name(a).toUpperCase();
             b = short_name(b).toUpperCase();
         }
-        else if (sort_mode == 2) {
+        else if (custom) {
             let a1 = indx(a);
             let b1 = indx(b);
             if (a1 != b1) [a, b] = [a1, b1]
@@ -289,15 +354,16 @@ print_accts.sort = accts => {
 }
 
 function income_statement() {
+    /* Generate the Income Statement */
     let attr = {title: "New Sub-Account", "data-acct": 4};
-    let amt = [-bal(4), bal(2)];
+    let amt = [-bal(4), bal(5)]; // 4, 2
     let inc = $("<section>").append($("<h2>").html($("<span>").html("Income").addClass("NewAcct").attr(attr)));
     print_accts(inc, tree[4], 0, true);
     inc.append($("<p>").addClass("Subtotal").html("Total Income").append(money(amt[0]).addClass("Right")));
 
-    attr["data-acct"] = 2;
+    attr["data-acct"] = 5; // 2
     let exp = $("<section>").append($("<h2>").html($("<span>").html("Expenses").addClass("NewAcct").attr(attr)));
-    print_accts(exp, tree[2], 0);
+    print_accts(exp, tree[5], 0);
     exp.append($("<p>").addClass("Subtotal").html("Total Expenses").append(money(amt[1]).addClass("Right")));
 
     let e = $("#IncomeStatement").html($("<h1>").html("Income Statement"));
@@ -306,26 +372,27 @@ function income_statement() {
 }
 
 function balance_sheet() {
+    /* Generate the Balance Sheet */
     let attr = {title: "New Sub-Account", "data-acct": 1};
-    let amt = [bal(1), -bal(3), -bal(5)];
+    let amt = [bal(1), -bal(2), -bal(3)]; // 1, 3, 5
     
     let asset = $("<section>").append($("<h2>").html($("<span>").html("Assets").addClass("NewAcct").attr(attr)));
     print_accts(asset, tree[1], 0);
     asset.append($("<p>").addClass("Subtotal").html("Total Assets").append(money(amt[0]).addClass("Right")));
 
-    attr["data-acct"] = 3;
+    attr["data-acct"] = 2;
     let liab = $("<section>").append($("<h2>").html($("<span>").html("Liabilities").addClass("NewAcct").attr(attr)));
-    print_accts(liab, tree[3], 0, true);
+    print_accts(liab, tree[2], 0, true);
     liab.append($("<p>").addClass("Subtotal").html("Total Liabilities").append(money(amt[1]).addClass("Right")));
 
     amt_eq = amt[0] - amt[1];
-    amt_net = -bal(4) - bal(2);
+    amt_net = -bal(4) - bal(5);
     amt_re = amt_eq - amt[2] - amt_net;
 
-    attr["data-acct"] = 5;
+    attr["data-acct"] = 3;
     let eq = $("<section>").append($("<h2>").html($("<span>").html("Equity").addClass("NewAcct").attr(attr)));
     eq.append($("<p>").html("Net Income").append(money(amt_net).addClass("Right")));
-    print_accts(eq, tree[5], 0, true);
+    print_accts(eq, tree[3], 0, true);
     if (amt_re) eq.append($("<p>").html("Retained Earnings").append(money(amt_re).addClass("Right")));
     eq.append($("<p>").addClass("Subtotal").html("Total Equity").append(money(amt_eq).addClass("Right")));
 
@@ -337,6 +404,7 @@ function balance_sheet() {
 /*** Account Ledger ***/
 
 function acct_ledger(a) {
+    /* Generate the ledger for the specified account number */
     if (a == null) a = acct_ledger.acct;
     else acct_ledger.acct = a = parseInt(a);
     let cred = is_debit(a) ? 1 : -1;
@@ -379,6 +447,7 @@ function acct_ledger(a) {
 }
 
 function transaction(date, descr, ...args) {
+    /* Create a new transaction object */
     let t = {date: date, descr: descr, data: [...args]};
     for (let i=0;i<t.data.length;i++) {
         if (typeof(t.data[i]) == "string") {
@@ -390,6 +459,7 @@ function transaction(date, descr, ...args) {
 }
 
 function edit_transaction(i) {
+    /* Run the New/Edit Transaction dialog */
     edit_transaction.index = i;
     let t = i === false ? transaction(date_str(), "Description", [acct_ledger.acct, 0], [acct_ledger.acct, 0]) : ledger[i];
     $("#TrDate")[0].valueAsDate = new Date(t.date);
@@ -488,12 +558,14 @@ edit_transaction.button = b => {
 /*** Settings dialog ***/
 
 function settings() {
+    /* Run the Settings dialog */
     $("#ReportLevel")[0].options.selectedIndex = print_accts.levels - 1;
     $("#OpenDate")[0].valueAsDate = new Date(open_date);
     $("#Cover, #Settings").show();
 }
 
 settings.button = () => {
+    /* Close the Settings dialog */
     print_accts.levels = $("#ReportLevel")[0].options.selectedIndex + 1;
     let date = date_str(0, get_date("#OpenDate"));
     if (date != open_date) {
@@ -508,17 +580,8 @@ settings.button = () => {
 /*** Import ***/
 
 function import_data(t) {
-    acct_tree.custom = [];
     t = t.split("****");
-    if (t.length > 3) {
-        let c = t[3].trim();
-        if (c.length) {
-            c = c.split(",");
-            for (let i=0; i<c.length; i++) c[i] = parseInt(c[i]);
-            acct_tree.custom = c;   
-        }
-    }
-    $("#SortOrder")[0].options.selectedIndex = acct_tree.custom.length ? 2 : 1;
+    acct_tree.custom_sort(t[3]);
     open_date = t[2].trim();
     for (let e of t[0].trim().split("\n")) {
         e = e.trim().split(",");
@@ -554,7 +617,7 @@ function export_data() {
         for (let [a,x] of t.data) csv += `,${a};${x}`;
         csv += "\n";
     }
-    csv += `****\n${open_date}`;
+    csv += `****\n${open_date}\n****${acct_tree.custom_sort.raw}`;
     let url = URL.createObjectURL(new Blob([csv], {"type": "text/csv"}));
     $("<a>").attr({href: url, download: `${open_file.fname}-${date_str(1)}.csv`})[0].click();
     URL.revokeObjectURL(url);
@@ -562,11 +625,11 @@ function export_data() {
 }
 
 function inc_st_click(ev) {
+    /* Handle clicks on the Income Statement button */
     if (ev.ctrlKey && ev.altKey) {
         let modified = $("nav").hasClass("Modified");
         if (modified) alert("Save changes before proceeding!");
         else if (confirm(`Save balances as of ${date_str(0, get_date("#DateEnd"))}?`)) {
-            console.log(acct);
             for (let a in balances) {
                 let t = path(a)[0];
                 acct[a][2] = t == 2 || t == 4 ? 0 : balances[a];
@@ -582,12 +645,10 @@ function inc_st_click(ev) {
 
 /*** Open ***/
 
-$(() => {
-    $("nav").hide();
-    show(3);
-});
+$(() => show(3));
 
 function open_file(fn) {
+    /* Read the ledger file */
     let reader = new FileReader();
     reader.addEventListener("loadend", () => init(reader.result));
     open_file.fname = fn.files[0].name.split('.')[0].split('-')[0];
@@ -597,46 +658,83 @@ function open_file(fn) {
 open_file.fname = "ledger";
 
 function init(csv) {
+    /* Initialize program using CSV-format ledger data */
+    history.pushState(null, "", location.href);
     $("#DateStart")[0].valueAsDate = new Date(date_str.month(-1));
     $("#DateEnd")[0].valueAsDate = new Date(date_str.month(0));
-    if (!csv) csv = init.data + date_str();
+    if (!csv) csv = init.data.replace('#', date_str());
     import_data(csv);
-    $("nav").show();
+    $("nav").removeClass("Hidden");
     calc_bal(1);
     show(0);
+    nav_height();
 }
 
-init.data = `100,Current Assets,1
-101,Fixed Assets,1
-102,Investment,1
-200,Financial,2
-201,Food,2
-202,Utilities,2
-300,Credit Cards,3
-400,Taxable,4
-401,Non-Taxable,4
-1001,Chequing Account,100,0
-1002,Savings Account,100,0
-1021,RRSP,102
-2001,Home Insurance,200,0
-2002,Bank Interest,200,0
-2003,Bank Service Charge,200,0
-2011,Groceries,201,0
-2012,Restaurant / Delivery,201,0
-2021,Electricity,202,0
-2022,Natural Gas,202,0
-2023,Telecom,202,0
-3001,Visa,300,0
-4001,Salary,400,0
-4002,Bank Interest,400,0
-4011,RRSP Income,401
-40111,GIC Interest,4011
+init.data = `101,Current Assets,1
+102,Fixed Assets,1
+103,Investment,1
+10101,Chequing Account,101,0
+10102,Savings Account,101,0
+10301,RRSP,102
+201,Credit Cards,2
+20101,Visa,201,0
+401,Taxable,4
+402,Non-Taxable,4
+40101,Salary,401,0
+40102,Bank Interest,401,0
+501,Financial,5
+502,Food,5
+503,Utilities,5
+504,Transportation,5
+50101,Home Insurance,501,0
+50102,Bank Interest,501,0
+50103,Bank Service Charge,501,0
+50201,Groceries,502,0
+50202,Restaurant / Delivery,502,0
+50301,Electricity,503,0
+50302,Natural Gas,503,0
+50303,Telecom,503,0
+50401,Auto Lease,504,0
+50402,Auto Insurance,504,0
+50403,Auto Maintenace,504,0
+50404,Gasoline,504,0
+50405,Public Transit,504,0
 ****
+****
+#
 ****
 `;
 
 
 /*** Event handlers ***/
+
+function print_adjust(mode) {
+    /* Modify document for printing */
+    let body = $("body");
+    if (mode) {
+        body.addClass("Print");
+        let cls = "PrintDates Right";
+        let date = s => get_date(s).toDateString().substring(4);
+        let end = date("#DateEnd");
+        let p = $("<p>").addClass(cls).insertAfter("#IncomeStatement > h1");
+        p.html(`${date("#DateStart")} - ${end}`);
+        p = $("<p>").addClass(cls).insertAfter("#BalanceSheet > h1");
+        p.html(end);
+        nav_height();
+    }
+    else {
+        $("p.PrintDates").remove();
+        body.removeClass("Print");
+        nav_height();
+    }
+}
+
+function nav_height() {
+    /* Set the <body> margin-top based on <nav> height */
+    let nav = $("nav");
+    let h = nav.is(":visible") ? nav.height() : 0;
+    $("body").css("margin-top", `${h}px`);
+}
 
 $(window).on("click", ev => {
     let e = $(ev.target);
@@ -671,4 +769,6 @@ $(window).on("click", ev => {
         }
         else edit_transaction(a);
     }
-});
+}).on("resize", nav_height).on("beforeprint", () => print_adjust(1)).on("afterprint", () => print_adjust(0));
+
+console.log(`Simple Ledger ${version}`);

@@ -21,22 +21,37 @@ body {font-size: 80%}
 
 .material-symbols-outlined {font-size: 200%}
 input[type=date] {font-size: 1em}
-.Hidden {display: none}
+.Hidden, body.Print > nav {display: none}
 
-#OpenFile {
-    max-width: calc(100vw - 8px);
-    margin-top: 3em;
+nav {
+    width: calc(100% - 0.5em);
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: white;
+    border-bottom: 1px solid black;
+    padding: 0.25em;
 }
 
+#OpenFile {max-width: calc(100vw - 8px)}
 #Settings input[type=date] {width: calc(12em - 20px)}
 #Settings select {width: 12em}
+
+button {
+    background-color: #fff0;
+    margin: 3px;
+    border-radius: 5px;
+    border: 1px solid #fff0;
+}
+
+button:hover, #OpenFile button:hover {background-color: #e0e0ff}
+button:not(#SaveBtn):hover, a {color: #0065fe}
 
 nav:not(.Modified) #SaveBtn {color: lightgrey}
 nav:not(.Modified) #SaveBtn:hover {background-color: #fff0}
 nav.Modified #SaveBtn {color: red}
-nav.Modified #SaveBtn:hover {background-color: #e0e0ff}
 
-nav, #Dialogs > div > p.Buttons {
+/* nav, #Dialogs > div > p.Buttons {
 
 button {
     margin: 3px;
@@ -44,22 +59,15 @@ button {
     border: 1px solid #fff0;
 }
 
-button:not(#SaveBtn):hover {
-    color: blue;
-    background-color: #e0e0ff;
-}
-
-}
-
-*:is(nav, #Dialogs > div > p.Buttons, #OpenFile) button:not(.Modified, :hover) {
-    background-color: #fff0;
-}
+} */
 
 #OpenFile button {
     border-radius: 5px;
     border: 1px solid #fff0;
-    width: 14.5em;
+    background-color: #f4f4f4;
+    width: 14em;
     margin: 1em;
+    padding: 6px;
 }
 
 #OpenFile button > *, #Dates * {vertical-align: middle}
@@ -108,6 +116,7 @@ nav button {height: 6em}
 
 .em12 {width: 12em}
 .em16 {width: 16em}
+.em18 {width: 18em}
 .em20 {width: 20em}
 .em24 {width: 24em}
 .em32 {width: 32em}
@@ -122,9 +131,13 @@ span.Right {float: right}
 .Right:not(span) {text-align: right}
 .Red {color: red}
 
+body:not(.Print) {
+
 .AcctLink, .NewAcct, #Ledger tr[data-index] {
     cursor: pointer;
     color: #0065fe;
+}
+
 }
 
 article p {
@@ -202,8 +215,6 @@ td, th {
     width: 50%;
     text-align: left;
 }
-
-/* #EditTr {left: calc(50vw - 29em - 1px)} */
 
 #EditTr table {
     border-collapse: collapse;

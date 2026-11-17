@@ -16,35 +16,35 @@
 </script>
 </head>
 <body>
-<nav>
+<nav class="Hidden">
     <button onclick="export_data()" id="SaveBtn"><span class="material-symbols-outlined">download</span><br/>Save<br/>&nbsp;</button>
     <button onclick="inc_st_click(event)" title="[Ctrl + Alt + Click] to reset ledger for next accounting period"><span class="material-symbols-outlined">currency_exchange</span><br/>Income<br/>Statement</button>
     <button onclick="show(1)"><span class="material-symbols-outlined">balance</span><br/>Balance<br/>Sheet</button>
     <button onclick="settings()"><span class="material-symbols-outlined">settings</span><br/>Settings<br/>&nbsp;</button>
-    <span class="Right">
-        <div>
-            <button id="NewBtn" onclick="edit_transaction(false)"><span class="material-symbols-outlined">add</span><br/>New<br/>Transaction</button>
-        </div>
-        <div id="Dates">
-            <span><input id="DateStart" type="date"/> &nbsp; – &nbsp;
-            <input id="DateEnd" type="date"/></span> &nbsp;
-            <button onclick="calc_bal(1);show()"><span class="material-symbols-outlined">check</span><br/>Apply<br/>Dates</button>
-        </div>
+    <button id="NewBtn" onclick="edit_transaction(false)"><span class="material-symbols-outlined">add</span><br/>New<br/>Transaction</button>
+    <span class="Right" id="Dates">
+        <span><input id="DateStart" type="date"/> &nbsp; – &nbsp;
+        <input id="DateEnd" type="date"/></span> &nbsp;
+        <button onclick="calc_bal(1);show()"><span class="material-symbols-outlined">check</span><br/>Apply<br/>Dates</button>
     </span>
 </nav>
 <article id="IncomeStatement"></article>
 <article id="BalanceSheet"></article>
 <article id="Ledger"></article>
-<article id="OpenFile">
-    <p class="Center">
+<article id="OpenFile" class="Center">
+    <h1>Simple Ledger</h1>
+    <p><img src="favicon.svg" class="em12" style="max-width:50%"/></p>
+    <p style="margin-bottom:3em"><a href="https://github.com/dmaccarthy/simple_ledger" target="GitHub">Source Code</a></p>
+    <p>
         <input class="Hidden" type="file" accept=".csv" oninput="open_file(this)"/>
-        <button onclick="$('#OpenFile input').trigger('click')"><span class="material-symbols-outlined">file_open</span> &nbsp; <span>Import Ledgers File</span></button><button onclick="init()"><span class="material-symbols-outlined">add</span> &nbsp; Create New Ledgers</button>
+        <button onclick="$('#OpenFile input').trigger('click')"><span class="material-symbols-outlined">file_open</span> &nbsp; <span>Import Ledger File</span></button><button onclick="init()"><span class="material-symbols-outlined">add</span> &nbsp; Create New Ledger</button>
     </p>
 </article>
 <div id="Cover"></div>
 <section id="Dialogs">
     <div id="Settings" class="em20">
         <h3>Settings</h3>
+        <p><input type="checkbox" id="ShowAcctNum"/> &nbsp;<label for="ShowAcctNum">Show Account Numbers</label></p>
         <p>Report Levels:</p>
         <p class="Center"><select id="ReportLevel">
             <option>1</option>
@@ -58,7 +58,6 @@
         <p class="Center"><select id="SortOrder">
             <option>Account Number</option>
             <option>Alphabetical</option>
-            <option>Custom</option>
         </select></p>
         <p>Opening Date:</p>
         <p class="Center"><input id="OpenDate" type="date"/></p>
@@ -71,7 +70,9 @@
         <p>Parent Account:</p>
         <p class="Center" id="ParentAcct"></p>
         <p><label for="AcctName">Account Name: </label></p>
-        <p class="Center"><input class="em20" type="text" id="AcctName"/></p>
+        <p class="Center"><input class="em18" type="text" id="AcctName"/></p>
+        <p><label for="AcctName">Account Number (no dashes): </label></p>
+        <p class="Center"># <input class="em16" type="number" step="1" min="100" id="AcctNum"/></p>
         <p><input type="checkbox" id="PH" onchange="edit_acct.toggle(this)"/> <label for="PH">Placeholder Account</label></p>
         <div>
             <p><label for="OpenBal">Opening Balance: </label></p>
