@@ -5,7 +5,7 @@
 }
 
 body {
-    min-width: 540px;
+    min-width: 512px;
     max-width: 1024px;
     margin: auto;
     margin-top: 0.5em;
@@ -13,8 +13,14 @@ body {
     font-family: "Noto Sans", "Open Sans", Oxygen, sans-serif;
 }
 
-.material-symbols-outlined {font-size: 32px}
-input[type=date] {font-size: 16px}
+@media (max-width: 640px) {
+
+body {font-size: 80%}
+
+}
+
+.material-symbols-outlined {font-size: 200%}
+input[type=date] {font-size: 1em}
 .Hidden {display: none}
 
 #OpenFile {
