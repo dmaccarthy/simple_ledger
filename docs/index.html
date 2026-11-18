@@ -39,6 +39,10 @@
         <input class="Hidden" type="file" accept=".csv" oninput="open_file(this)"/>
         <button onclick="$('#OpenFile input').trigger('click')"><span class="material-symbols-outlined">file_open</span> &nbsp; <span>Import Ledger File</span></button><button onclick="init()"><span class="material-symbols-outlined">add</span> &nbsp; Create New Ledger</button>
     </p>
+    <div id="UnsavedLedgers" class="Hidden">
+        <p>There are unsaved ledgers in local storage:</p>
+        <ul></ul>
+    </div>
 </article>
 <div id="Cover"></div>
 <section id="Dialogs">

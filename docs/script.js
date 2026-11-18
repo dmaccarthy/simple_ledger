@@ -269,7 +269,10 @@ edit_acct.button = btn => {
 
 function calc_bal(unmodified) {
     /* Calculate balances for all non-placeholder accounts */
-    if (!unmodified) $("nav").addClass("Modified");
+    if (!unmodified) {
+        $("nav").addClass("Modified");
+        localStorage.setItem(export_data.session_key, export_data.csv());
+    }
     let start = get_date("#DateStart");
     let end = get_date("#DateEnd");
     calc_bal.dates = [start, end];
@@ -604,7 +607,17 @@ function import_data(t) {
 /*** Export ***/
 
 function export_data() {
+    /* Download ledger data as CSV file */
     if (!$("nav").hasClass("Modified")) return;
+    let url = URL.createObjectURL(new Blob([export_data.csv()], {"type": "text/csv"}));
+    $("<a>").attr({href: url, download: `${open_file.fname}-${date_str(1)}.csv`})[0].click();
+    URL.revokeObjectURL(url);
+    $("nav").removeClass("Modified");
+    localStorage.removeItem(export_data.session_key);
+}
+
+export_data.csv = () => {
+    /* Format ledger data as CSV text*/
     let csv = "";
     for (let a in acct) {
         csv += `${a}`;
@@ -617,11 +630,7 @@ function export_data() {
         for (let [a,x] of t.data) csv += `,${a};${x}`;
         csv += "\n";
     }
-    csv += `****\n${open_date}\n****${acct_tree.custom_sort.raw}`;
-    let url = URL.createObjectURL(new Blob([csv], {"type": "text/csv"}));
-    $("<a>").attr({href: url, download: `${open_file.fname}-${date_str(1)}.csv`})[0].click();
-    URL.revokeObjectURL(url);
-    $("nav").removeClass("Modified");
+    return csv + `****\n${open_date}\n****${acct_tree.custom_sort.raw}`;
 }
 
 function inc_st_click(ev) {
@@ -645,7 +654,19 @@ function inc_st_click(ev) {
 
 /*** Open ***/
 
-$(() => show(3));
+$(() => {
+    for (let k in localStorage) {
+        k = k.split(":");
+        let div = $("#UnsavedLedgers");
+        let ul = div.children("ul");
+        if (k[0] == "simple-ledger" && k[1] == "unsaved") {
+            div.removeClass("Hidden");
+            let s = $("<span>").html(k[2]).addClass("Link");
+            ul.append($("<li>").html(s));
+        }
+    }
+    show(3);
+});
 
 function open_file(fn) {
     /* Read the ledger file */
@@ -659,7 +680,7 @@ open_file.fname = "ledger";
 
 function init(csv) {
     /* Initialize program using CSV-format ledger data */
-    history.pushState(null, "", location.href);
+    export_data.session_key = "simple-ledger:unsaved:" + (new Date().toLocaleString("en-CA", {hour12: false}).replaceAll(':', '.'));
     $("#DateStart")[0].valueAsDate = new Date(date_str.month(-1));
     $("#DateEnd")[0].valueAsDate = new Date(date_str.month(0));
     if (!csv) csv = init.data.replace('#', date_str());
@@ -769,6 +790,23 @@ $(window).on("click", ev => {
         }
         else edit_transaction(a);
     }
+    if (e.closest("#UnsavedLedgers").length) {
+        let key = "simple-ledger:unsaved:" + e.html();
+        if (ev.ctrlKey && ev.altKey) {
+            localStorage.removeItem(key);
+            location.reload();
+        }
+        else {
+            let csv = localStorage.getItem(key);
+            localStorage.removeItem(key);
+            init(csv);
+            $("nav").addClass("Modified");
+            localStorage.setItem(export_data.session_key, csv);
+        }
+    }
 }).on("resize", nav_height).on("beforeprint", () => print_adjust(1)).on("afterprint", () => print_adjust(0));
 
 console.log(`Simple Ledger ${version}`);
+
+
+// $(window).on("popstate", () => console.log("pop")).on("pushstate", () => console.log("push"));

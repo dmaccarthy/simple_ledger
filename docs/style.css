@@ -37,6 +37,13 @@ nav {
 #Settings input[type=date] {width: calc(12em - 20px)}
 #Settings select {width: 12em}
 
+#UnsavedLedgers {
+    width: 24em;
+    margin: auto;
+    margin-top: 2em;
+    text-align: left;
+}
+
 button {
     background-color: #fff0;
     margin: 3px;
@@ -45,7 +52,10 @@ button {
 }
 
 button:hover, #OpenFile button:hover {background-color: #e0e0ff}
-button:not(#SaveBtn):hover, a {color: #0065fe}
+button:not(#SaveBtn):hover, a, span.Link {
+    color: #0065fe;
+    cursor: pointer;
+}
 
 nav:not(.Modified) #SaveBtn {color: lightgrey}
 nav:not(.Modified) #SaveBtn:hover {background-color: #fff0}
