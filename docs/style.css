@@ -1,87 +1,13 @@
 :root {
-    --left: 1em;
+    --left: 1.5em;
     --right: 7.25em;
-    --line: 0.3em;
+    --line: 0.5em;
 }
+
 
 body {
-    min-width: 512px;
-    max-width: 1024px;
-    margin: auto;
-    margin-top: 0.5em;
-    font-size: 12pt;
-    font-family: "Noto Sans", "Open Sans", Oxygen, sans-serif;
+    font-family: 'Noto Sans', sans-serif;
 }
-
-@media (max-width: 640px) {
-
-body {font-size: 80%}
-
-}
-
-.material-symbols-outlined {font-size: 200%}
-input[type=date] {font-size: 1em}
-.Hidden, body.Print > nav {display: none}
-
-nav {
-    width: calc(100% - 0.5em);
-    position: fixed;
-    left: 0;
-    top: 0;
-    background-color: white;
-    border-bottom: 1px solid black;
-    padding: 0.25em;
-}
-
-#OpenFile {max-width: calc(100vw - 8px)}
-#Settings input[type=date] {width: calc(12em - 20px)}
-#Settings select {width: 12em}
-
-#UnsavedLedgers {
-    width: 24em;
-    margin: auto;
-    margin-top: 2em;
-    text-align: left;
-}
-
-button {
-    background-color: #fff0;
-    margin: 3px;
-    border-radius: 5px;
-    border: 1px solid #fff0;
-}
-
-button:hover, #OpenFile button:hover {background-color: #e0e0ff}
-button:not(#SaveBtn):hover, a, span.Link {
-    color: #0065fe;
-    cursor: pointer;
-}
-
-nav:not(.Modified) #SaveBtn {color: lightgrey}
-nav:not(.Modified) #SaveBtn:hover {background-color: #fff0}
-nav.Modified #SaveBtn {color: red}
-
-/* nav, #Dialogs > div > p.Buttons {
-
-button {
-    margin: 3px;
-    border-radius: 5px;
-    border: 1px solid #fff0;
-}
-
-} */
-
-#OpenFile button {
-    border-radius: 5px;
-    border: 1px solid #fff0;
-    background-color: #f4f4f4;
-    width: 14em;
-    margin: 1em;
-    padding: 6px;
-}
-
-#OpenFile button > *, #Dates * {vertical-align: middle}
-nav > *, nav > span *, p.Buttons > * {vertical-align: top}
 
 #Cover {
     width: 100vw;
@@ -89,155 +15,170 @@ nav > *, nav > span *, p.Buttons > * {vertical-align: top}
     position: fixed;
     left: 0;
     top: 0;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(2px);
     display: none;
 }
 
-#Dialogs > div {
-    font-size: 90%;
-    position: fixed;
-    top: 4em;
-    left: 2em;
-    max-width: 98%;
-    margin: auto;
-    padding: 0.5em;
-    border: 2px solid blue;
+#PopUp {
     background-color: #f0f0ff;
+    border: 2px solid blue;
+    max-width: calc(80vw - 8px);
+    max-height: calc(100vh - 4em - 6px);
+    overflow: auto;
+    position: fixed;
+    left: 2em; /*calc(10vw - 6px);*/
+    top: 2em;
+    padding: 1em;
     display: none;
+    z-index: 1;
 }
 
-#Dialogs > div > h3 {
+#Dialogs, #Buttons {display: none}
+
+#Buttons > button, #PopUp button {
+    width: 3em;
+    height: 3em;
+    color: #0065fe;
+    background-color: #fff0;
+    border: none;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#PopUp p.Buttons {
+    text-align: center;
+    margin-top: 0.25em;
+    margin-bottom: 0;
+}
+
+#PopUp button {
+    width: 7em;
+    height: 6em;
+    margin: 0 0.5em;
+}
+
+#Buttons > button:hover {cursor: pointer}
+span.material-symbols-outlined {font-size: 24pt}
+.Red, .Negative {color: red}
+.Hidden {display: none}
+
+.em20 {width: 20em}
+.em24 {width: 24em}
+.em32 {width: 32em}
+
+.hpad1 {padding-left: 1em; padding-right: 1em}
+
+main {
+    max-width: 1000px;
+    margin: auto;
+}
+
+main.NoBefore tr.Before, main.NoAfter tr.After {display: none}
+
+h2 {
+    font-size: 175%;
+    margin-top: 0;
+}
+
+#PopUp h2 {
+    font-size: 125%;
     text-align: center;
     margin-top: 0.25em;
 }
 
-#Dialogs > div > p.Buttons {
-    text-align: center;
-    margin-bottom: 0;
-}
+main p {margin: 0.25em auto}
 
-#Dialogs > div > p.Buttons > button, nav button {
-    width: 6em;
-    padding: 2px;
-    margin: 0.5em;
-}
-
-nav button {height: 6em}
-
-.em12 {width: 12em}
-.em16 {width: 16em}
-.em18 {width: 18em}
-.em20 {width: 20em}
-.em24 {width: 24em}
-.em32 {width: 32em}
-.em48 {width: 48em}
-.Center {text-align: center}
-
-article {
-    padding: 0.5em;
-}
-
-span.Right {float: right}
-.Right:not(span) {text-align: right}
-.Red {color: red}
-
-body:not(.Print) {
-
-.AcctLink, .NewAcct, #Ledger tr[data-index] {
-    cursor: pointer;
-    color: #0065fe;
-}
-
-}
-
-article p {
-    margin-top: var(--line);
-    margin-bottom: var(--line);
-}
-
-article p:is(.Subtotal, .Total) {
-    margin-top: calc(2*var(--line));
-    padding-top: calc(2*var(--line));
-    font-weight: bold;
-}
-
-article p.Subtotal {
+p.Overline {
     border-top: 1px solid black;
+    padding-top: 0.5em;
 }
 
-article p.Level1 {
+p.Level0 {
+    font-size: 125%;
+    font-weight: bold;
+    margin: 0.5em auto;
+}
+
+p.Level0 > span.Right {
+    font-weight: normal;
+    font-size: 80%;
+    padding-top: 4px;
+}
+
+p.Level0:not(.Overline) {
+    margin-top: 1em;
+}
+
+p.Level1 {
     margin-left: var(--left);
     margin-right: var(--right);
 }
 
-article p.Level2 {
+p.Level2 {
     margin-left: calc(2 * var(--left));
     margin-right: calc(2 * var(--right));
 }
 
-article p.Level3 {
+p.Level3 {
     margin-left: calc(3 * var(--left));
     margin-right: calc(3 * var(--right));
 }
 
-article p.Level4 {
+p.Level4 {
     margin-left: calc(4 * var(--left));
     margin-right: calc(4 * var(--right));
 }
 
-article p.Level5 {
+p.Level5 {
     margin-left: calc(5 * var(--left));
     margin-right: calc(5 * var(--right));
 }
 
-article p.Level6 {
+p.Level6 {
     margin-left: calc(6 * var(--left));
     margin-right: calc(6 * var(--right));
 }
 
-#Ledger > table {
-    width: 100%;
-    border-collapse: collapse;
-
-tbody tr:nth-child(even), thead tr {
-    background-color: lightgrey;
-}
-
-td, th {
-    border: 1px solid black;
-    padding: 2px;
-}
-
-}
-
-
-#Ledger > table td {
-    width: 18%;
-    text-align: right;
-}
-
-#Ledger > table td:nth-child(1) {
-    width: 12%;
-    text-align: center;
-}
-
-#Ledger > table td:nth-child(2) {
-    width: 50%;
-    text-align: left;
-}
-
-#EditTr table {
-    border-collapse: collapse;
+table {
     margin: auto;
+    border-collapse: collapse;
 
 td, th {
     border: 1px solid black;
-    padding: 2px;
-}
-
-td:not(:nth-child(1)) {
-    width: 14em;
-    text-align: right;
+    width: 8em;
+    padding: 3px;
 }
 
 }
+
+table.Ledger {
+
+td:nth-child(1) {text-align: center}
+th:nth-child(2) {min-width: 20em}
+}
+
+#Tran_New table {
+    margin-bottom: 1em;
+
+td, th {width: 12em}
+
+}
+
+body.Print #Buttons {display: none}
+
+body:not(.Print) {
+
+span[data-acct], .Link, #Buttons > button, table.Ledger tr[data-number] {
+    color: #0065fe;
+    cursor:pointer;
+}
+
+*:is(span[data-acct], .Link):hover {text-decoration: underline}
+#Buttons > button:hover, #PopUp button:hover {color: red}
+
+}
+
+
+.Center {text-align: center}
+p.Right, td.Right {text-align: right}
+span.Right {float: right}

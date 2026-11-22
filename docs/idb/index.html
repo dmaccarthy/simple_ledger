@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en-ca">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Simple Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="shortcut icon" type="image/svg+xml" href="favicon.svg" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=add,menu,check,close,delete" />
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script type="text/javascript" src="idb.js"></script>
+<script type="text/javascript">
+
+
+
+$(() => {
+    let db, name = "idb_test";
+    let store1 =  ["store1", true, {date: false, name: false}];
+    let store2 =  ["store2", false, {date: false}];
+    IDB.open(name, 1, store1, store2).then(r => {
+        db = new IDB(r);
+        db.put("store1", 1, {name: "Fred", number: 2})
+        db.put("store1", 1, {name: "Barney", number: 1})
+        console.log(db);
+        db.query("store1", 1, "name", "Fred").then(console.log);
+    });
+});
+
+</script>
+</head>
+<body>
+
+</body>
+</html>
