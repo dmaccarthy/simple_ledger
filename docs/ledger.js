@@ -70,7 +70,6 @@ constructor(db) {
     super(db);
     this.date1 = new LDate().month(0);
     this.date2 = new LDate().month(1);
-    this.levels = Ledger.levels;
 }
 
 get name() {return this._db.name.split(':')[1]}
@@ -78,7 +77,7 @@ get name() {return this._db.name.split(':')[1]}
 json(mode, ...args) { // 0 = Original Object, 1 = Processed Object, 2 = JSON string, 3 = Download JSON
     let renum = mode == 3 && args.length > 0;
     let fn = `${this.name}${renum ? '-renumbered' : ''}.json`;
-    let data = {accounts: this.accounts, ledger: this.ledger};
+    let data = {accounts: this.accounts, ledger: this.ledger, "simple-ledger": Ledger.version};
     try {
     if (mode) { 
         // Remove account number duplication and convert ledger dates to strings
@@ -169,13 +168,18 @@ acct_new(name, parent, number, ph) {
     else throw(`cannot create account: [${parent} -> ${number}]`);
 }
 
+acct_autonum(par) {
+    let accts = this.accounts;
+    let num = 100 * par + 1;
+    while (accts[num]) num++;
+    return num;
+}
+
 acct_valid(parent, number) {
     /* Get a valid new account number */
     let accts = this.accounts;
     if (accts[parent] == null) return;
-    if (!number) number = 100 * parent + 1;
-    else if (number < 100) number = 101;
-    while (accts[number]) number++;
+    if (!number || number < 100) number = this.acct_autonum(parent);
     return number;
 }
 
@@ -299,7 +303,14 @@ isdebit(a) {
 static money(b) {
     /* Create a <span> element to display a dollar amount */
     let s = $("<span>").addClass("Right");
-    let m = '$' + (Math.abs(b) / 100).toFixed(2);
+    let m = (Math.abs(b) / 100).toFixed(2);
+    let comma = 6, sz = m.length;
+    while (sz > comma) {
+        m = `${m.substring(0, sz - comma)} ${m.substring(sz - comma)}`;
+        comma += 4;
+        sz += 1;
+    }
+    m = '$' + m;
     if (b < 0) s.html(`(${m})`).addClass("Negative");
     else s.html(m);
     return s;
@@ -308,11 +319,19 @@ static money(b) {
 acct_ledger(n, sel) {
     /* Display an account ledger */
     let bal = this.page == "bal";
+    let show = db.dialogs.filter("#Ledg_Show");
+
     let s = $("<span>").html(this.long_name(n)).on("click",
         bal ? ev => db.balance_sheet() : ev => db.income_statement());
     s.addClass("Link").attr({title: "Back to " + (bal ? "Balance Sheet" : "Income Statement")});
-    let h2 = $("<h2>").html(s).append($("#Buttons").show());
+
+    let h2 = $("<h2>").html(s);
+    s = $("<span>").addClass("Right").appendTo(h2);;
+    s.html(show).append($("#Buttons").show());
+
     sel = $(sel ? sel : "main").html(h2);
+    show = show[0].options.selectedIndex;
+
     let tbl = $("<table>").addClass("Ledger").appendTo(sel);
     let tr = $("<tr>").appendTo($("<thead>").appendTo(tbl));
     for (let th of ["Date", "Description", "Amount", "Balance"])
@@ -327,13 +346,14 @@ acct_ledger(n, sel) {
         let amt;
         for (let [a, d] of t.data) if (a == n) amt = amt == null ? d : d + amt;
         if (amt != null) {
-            tr = $("<tr>").appendTo(tbl).attr({"data-number": t.number, title: "Edit Transaction"});
-            if (t.date < d1) tr.addClass("Before");
-            else if (t.date >= d2) tr.addClass("After");
-            amt *= this.isdebit(n);
-            bal += amt;
-            for (let td of [new LDate(t.date).str(), t.descr, m(amt), m(bal)])
-                $("<td>").html(td).appendTo(tr);
+            let timing = t.date < d1 ? 1 : (t.date > d2 ? 2 : 0);
+            if (timing == 0 || (timing & show)) {
+                tr = $("<tr>").appendTo(tbl).attr({"data-number": t.number, title: "Edit Transaction"});
+                amt *= this.isdebit(n);
+                bal += amt;
+                for (let td of [new LDate(t.date).str(), t.descr, m(amt), m(bal)])
+                    $("<td>").html(td).appendTo(tr);
+            }
         }
     }
     this.page = `ledg-${n}`;
@@ -341,7 +361,8 @@ acct_ledger(n, sel) {
 
 print_bal(sel, nums, level) {
     /* Display the balance of an account and its subaccounts */
-    if (level > this.levels) return;
+    let acct_depth = db.dialogs.filter("#Acct_Depth")[0].options.selectedIndex;
+    if (level > acct_depth) return;
     let accts = this.accounts;
     let bals = this.balances(this.date1, this.date2);
     let title = ["New Sub-Account", "Open Account Ledger", " [Click]\nEdit Account [Ctrl + Click]"];
@@ -362,7 +383,7 @@ print_bal(sel, nums, level) {
         if (n == 3) { // Equity
             let eq = bals[1] + bals[2];
             p.children("span.Right").replaceWith(Ledger.money(eq));
-            if (net && this.levels > 0) line("Net Income", null, net, 1);
+            if (net && acct_depth > 0) line("Net Income", null, net, 1);
         }
         else if (n == 5)
             line("Net Income", null, net, 0).addClass("Overline");
@@ -376,7 +397,9 @@ balance_sheet(sel) {
     /* Display the balance sheet */
     let s = $("<span>").html("Balance Sheet").on("click", ev => db.income_statement());
     s.addClass("Link").attr({title: "Switch to Income Statement"});
-    let h2 = $("<h2>").html(s).append($("#Buttons").show());
+    let h2 = $("<h2>").html(s);
+    s = $("<span>").addClass("Right").appendTo(h2);;
+    s.html(db.dialogs.filter("#Acct_Depth")).append($("#Buttons").show());
     s = $("<span>").html(`As of ${this.date3}`).addClass("Link Edit_Date").attr({title: "Change Dates"});
     let p = $("<p>").addClass("Center").html(s);
     sel = $(sel ? sel : "main").html(h2).append(p);
@@ -388,7 +411,13 @@ income_statement(sel) {
     /* Display the income statement */
     let s = $("<span>").html("Income Statement").on("click", ev => db.balance_sheet());
     s.addClass("Link").attr({title: "Switch to Balance Sheet"});
-    let h2 = $("<h2>").html(s).append($("#Buttons").show());
+
+    let h2 = $("<h2>").html(s);
+    s = $("<span>").addClass("Right").appendTo(h2);;
+    s.html(db.dialogs.filter("#Acct_Depth")).append($("#Buttons").show());
+
+    // let h2 = $("<h2>").html(s).append($("#Buttons").show());
+
     s = $("<span>").html(`${this.date1} &ndash; ${this.date3}`).addClass("Link Edit_Date").attr({title: "Change Dates"});
     let p = $("<p>").addClass("Center").html(s);
     sel = $(sel ? sel : "main").html(h2).append(p);
@@ -400,7 +429,6 @@ income_statement(sel) {
 
 
 Ledger.prefix = "simple-ledger";
-Ledger.levels = 6;
-Ledger.version = "0.1.1-dev";
+Ledger.version = "0.1.2-dev";
 
 console.log(`Simple Ledger v${Ledger.version}`);

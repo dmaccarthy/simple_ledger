@@ -33,7 +33,10 @@ body {
     z-index: 1;
 }
 
-#Dialogs, #Buttons {display: none}
+#Buttons {
+    display: none;
+    float: right;
+}
 
 #Buttons > button, #PopUp button {
     width: 3em;
@@ -57,14 +60,30 @@ body {
     margin: 0 0.5em;
 }
 
+#PopUp button[disabled] {color: lightgrey}
+#Buttons * {vertical-align: middle}
 #Buttons > button:hover {cursor: pointer}
 span.material-symbols-outlined {font-size: 24pt}
 .Red, .Negative {color: red}
-.Hidden {display: none}
+.Blue {color: #0065fe}
+.Hidden, #Dialogs {display: none}
 
+#Acct_Depth, #Ledg_Show {
+    vertical-align: middle;    
+    padding: 0.2em;  
+    margin-right: 1em;  
+}
+
+.em6 {width: 6em}
+.em8 {width: 8em}
+.em10 {width: 10em}
+.em12 {width: 12em}
 .em20 {width: 20em}
 .em24 {width: 24em}
+.em28 {width: 28em}
 .em32 {width: 32em}
+.em36 {width: 32em}
+.em40 {width: 40em}
 
 .hpad1 {padding-left: 1em; padding-right: 1em}
 
@@ -73,12 +92,12 @@ main {
     margin: auto;
 }
 
-main.NoBefore tr.Before, main.NoAfter tr.After {display: none}
-
 h2 {
     font-size: 175%;
-    margin-top: 0;
+    margin-top: 0.5em;
 }
+
+.AutoCenter {margin: auto}
 
 #PopUp h2 {
     font-size: 125%;
@@ -88,7 +107,7 @@ h2 {
 
 main p {margin: 0.25em auto}
 
-p.Overline {
+.Overline {
     border-top: 1px solid black;
     padding-top: 0.5em;
 }
@@ -174,7 +193,7 @@ span[data-acct], .Link, #Buttons > button, table.Ledger tr[data-number] {
 }
 
 *:is(span[data-acct], .Link):hover {text-decoration: underline}
-#Buttons > button:hover, #PopUp button:hover {color: red}
+#Buttons > button:hover, #PopUp button:not([disabled]):hover {color: red}
 
 }
 

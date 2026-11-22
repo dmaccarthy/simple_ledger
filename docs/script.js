@@ -1,17 +1,17 @@
 
 
-let db;
+let db, databases = [];
 
 function cover(dialog) {
     let cover = $("#Cover, #PopUp");
     if (dialog === false) {
-        $("#PopUp > *").appendTo("#Dialogs");
+        db.dialogs.remove();
         cover.hide();
     }
     else {
         cover.show();
         if (dialog) {
-            $("#PopUp").html($(dialog));
+            $("#PopUp").html(db.dialogs.filter(dialog));
             center_dialog();
         }
     }
@@ -54,35 +54,93 @@ edit_date.okay = () => {
     go_main();
 }
 
-function acct_delete(acct) {
-    console.log("Delete", acct);
-}
+function acct_edit(acct, create_sub) {
+    create_sub = create_sub == true;
+    let depth_limit = db.accounts[acct].path.length >= (db.max_depth - 1) && create_sub;
+    let id = "#Acct_Edit", parent;
+    cover(id);
+    let dlg = $(id).attr("data-info", `${acct},${create_sub ? 1 : 0}`);
+    let anum = $("#Acct_Num");
+    dlg.children("h2").html(create_sub ? "New Sub-Account": "Edit Account");
+    let sel = db.select(true).attr({title: "Parent Account"})[0];
+    dlg.find("select").replaceWith(sel);
 
-function acct_edit(acct) {
-    console.log("Edit", acct);
-}
+    let ph = $("#Acct_PH")[0];
+    ph.disabled = !create_sub || depth_limit;
 
-function acct_new(acct) {
-    console.log("New", acct);
-}
-
-function click_acct(num, mod) {
-    if ((mod & 6) == 6) {
-        if (num > 5) acct_delete(num);
+    if (create_sub) {
+        parent = acct;
+        acct = db.acct_autonum(parent);
+        $("#Acct_Name").val("");
     }
-    else if ((mod & 2) == 2) acct_edit(num);
-    else if (db.accounts[num].subacct == null) db.acct_ledger(num);
-    else acct_new(num);
+    else {
+        let a = db.accounts[acct];
+        let p = a.path;
+        parent = p[p.length - 2];
+        $("#Acct_Name").val(a.name);
+        ph.checked = a.subacct != null;
+    }
+    if (depth_limit) ph.checked = false;
+
+    let opt = sel.options;
+    for (let i=0;i<opt.length;i++) if (opt[i].value == parent) opt.selectedIndex = i;
+
+    let auto = $("#Acct_Auto")[0];
+    anum[0].disabled = auto.checked = true;
+    auto.disabled = !create_sub;
+    anum.val(acct);
 }
 
+acct_edit.okay = () => {
+    let dlg = $("#Acct_Edit");
+    let [acct, create_sub] = dlg.attr("data-info").split(',');
+    let [name, num, ph] = [$("#Acct_Name").val(), parseInt($("#Acct_Num").val()), $("#Acct_PH")[0].checked];
+    let par = dlg.find("select")[0].options;
+    par = parseInt(par[par.selectedIndex].value);
+    if (create_sub == '1') db.acct_new(name, par, num, ph);
+    else {
+        let accts = db.accounts;
+        acct = accts[parseInt(num)];
+        acct.name = name;
+        let args = [acct];
+        let old = acct.path;
+        old = old[old.length - 2];
+        if (old != par) {
+            old = accts[old];
+            par = accts[par];
+            acct.path = [...par.path, num];
+            par.subacct.push(num);
+            let n = old.subacct.indexOf(num);
+            old.subacct.splice(n, 1);
+            args.push(par);
+            args.push(old);
+        }
+        db.put("accounts", 1, ...args);
+    }
+    go_main();
+
+}
+
+function on_acct_auto(e) {$("#Acct_Num")[0].disabled = e.checked}
+
+function click_acct(num) {
+    // if ((mod & 6) == 6) {
+    //     if (num > 5) acct_delete(num);
+    // }
+    // else if ((mod & 2) == 2) acct_edit(num);
+    // else 
+    if (db.accounts[num].subacct == null) db.acct_ledger(num);
+    else acct_edit(num, 1);
+}
 
 function tran_edit(n) {
     /* Edit a new or existing transaction */
-    let tran = n == null ? {date: LDate.today(), descr: "", data: [[null, 1000], [null, -1000]]} : db.ledger[db.index_of(n)];
+    let a = db.page.split('-');
+    a = a.length > 1 ? parseInt(a[1]) : 0;
+    let tran = n == null ? {date: LDate.today(), descr: "", data: [[a, 1000], [a, -1000]]} : db.ledger[db.index_of(n)];
     cover("#Tran_New");
-    let dlg = $("#Tran_New");
+    let dlg = $("#Tran_New").attr("data-info", n == null ? -1 : n);
     dlg.find("tbody").html("");
-    dlg.find("input[type=number]").val(n == null ? -1 : n);
     dlg.find("input[type=date]")[0].valueAsDate = tran.date;
     let data = tran.data;
     for (let r=0; r<data.length; r++) {
@@ -99,7 +157,7 @@ function tran_edit(n) {
 tran_edit.okay = () => {
     /* Save the transaction */
     let dlg = $("#Tran_New");
-    let num = parseInt(dlg.find("input[type=number]").val());
+    let num = parseInt($("#Tran_New").attr("data-info"));
     let date = new LDate(dlg.find("input[type=date]")[0].valueAsDate).add(true);
     let descr = dlg.find("input[type=text]").val();
     let data = [];
@@ -115,7 +173,7 @@ tran_edit.okay = () => {
 }
 
 let td_amt = td => {
-    let amt = parseFloat($(td).text().replace('$', ''));
+    let amt = parseFloat($(td).text().replaceAll(' ', '').replace('$', ''));
     return isNaN(amt) ? 0 : Math.round(100 * amt);
 }
 
@@ -166,15 +224,12 @@ tran_edit.split = () => {
 
 tran_edit.del = () => {
     if (confirm("This action cannot be undone!\nContinue?")) {
-        let num = parseInt($("#Tran_New input[type=number]").val());
+        let num = parseInt($("#Tran_New").attr("data-info"));
         db.del("ledger", num);
         db.ledger.splice(db.index_of(num), 1);
         go_main();
     }
 }
-
-let menu = () => console.log("menu");
-
 
 function example() {
     let n = db.acct_new("Current Assets", 1, 0, 1).number;
@@ -202,7 +257,9 @@ function init(db_name) {
 
     Ledger.open(db_name).then(async r => {
         db = r;
-        db.dialogs = $("#Dialogs > *");
+        db.max_depth = $("#Acct_Depth")[0].options.length - 1;
+        let dlg = $("#Dialogs").remove();
+        db.dialogs = dlg.children();
         // example();
 
         db.balance_sheet();
@@ -212,8 +269,11 @@ function init(db_name) {
             let target = $(ev.target);
 
             // Click on account name
-            let acct = target.attr("data-acct");
-            if (acct) click_acct(parseInt(acct), mod);
+            let acct = parseInt(target.attr("data-acct"));
+            if (acct) {
+                if (mod & 2) acct_edit(acct);
+                else click_acct(acct);
+            }
 
             // Click on ledger entry
             try {
@@ -231,21 +291,13 @@ function init(db_name) {
                 let f = init.actions[action];
                 if (f) f();
             }
-        }).on("keydown", ev => {
-            if (ev.ctrlKey && ev.altKey) {
-                let key = ev.originalEvent.key.toLowerCase();
-                let main = $("main");
-                if (key == 'b') main.toggleClass("NoBefore");
-                else if (key == 'a') main.toggleClass("NoAfter");
-                else if (key == 's') main.removeClass("NoAfter NoBefore");
-                else if (key == 'h') main.addClass("NoAfter NoBefore");
-            }
         });
     })
 }
 
-init.actions = {go_main: go_main, edit_date: edit_date.okay, menu_btn: menu,
-    plus_btn: () => tran_edit(), edit_tran: tran_edit.okay, add_split: tran_edit.split, del_tran: tran_edit.del};
+init.actions = {go_main: go_main, edit_date: edit_date.okay, menu_btn: () => cover("#Menu"), edit_acct: acct_edit.okay,
+    plus_btn: () => tran_edit(), edit_tran: tran_edit.okay, add_split: tran_edit.split, del_tran: tran_edit.del,
+};
 
 
 $(() => {
@@ -256,23 +308,25 @@ $(() => {
         let ul = $("main ul");
         for (let i=0;i<dbs.length;i++) {
             let name = dbs[i].name.split(':');
-            if (name.length == 2 && name[0] == Ledger.prefix)
+            if (name.length == 2 && name[0] == Ledger.prefix) {
                 ul.append($("<li>").html($("<span>").addClass("Link").html(name[1])));
+                databases.push(name[1]);
+            }
         }
-        ul.append($("<li>").html($("<span>").addClass("Link New_DB").html("[New Ledger]")));
-        ul.find("li > span").on("click", ev => {
+        if (dbs.length) ul.find("li > span").on("click", ev => {
             let e = $(ev.target);
-            let db_name = e.hasClass("New_DB") ? prompt("Ledger Name?").replaceAll(':', '_') : e.text();
+            let db_name = e.text();
             if (db_name) location.href = location.pathname + `?db=${db_name}`;
         });
+        else $(".Also").hide();
     });
 });
 
 
 function delete_all() {
     /* Export ledger as JSON and then delete from browser storage */
-    if (confirm("Export and then delete all data?")) {
-        db.json(3);
+    db.json(3);
+    if (confirm("Delete all data from browser storage?\n\nJust in case... \nyou should verify that data export was successful first!")) {
         db.close();
         indexedDB.deleteDatabase(Ledger.prefix + ':' + db.name);
         location.href = location.pathname;
@@ -282,4 +336,50 @@ function delete_all() {
 function renumber(...args) {
     /* Export ledger as JSON after renumering accounts */
     db.json(3, ...args);
+}
+
+function import_json() {
+    let e = $("#Import_JSON");
+    let f = e[0].files[0];
+    let reader = new FileReader();
+    reader.addEventListener("loadend", () => {
+        let data = JSON.parse(reader.result);
+        if (data["simple-ledger"]) {
+            let db_name = prompt("Ledger Name?", f.name.split('.')[0])
+            if (db_name) {
+                db_name = db_name.replaceAll(':', '_');
+                if (databases.indexOf(db_name) != -1) alert("That ledger name is already in use!");
+                else Ledger.open(db_name).then(async r => import_json.load(r, data)).then(() => {
+                    location.href = location.pathname + `?db=${db_name}`;
+                });
+            }
+            else alert("File does not appear to contain valid Simple Ledger data!");
+        }
+    });
+    reader.readAsText(f); 
+}
+
+function new_ledger() {
+    let db_name = prompt("Ledger Name?");
+    if (db_name) location.href = location.pathname + `?db=${db_name.replaceAll(':', '_')}`;
+}
+
+import_json.load = async(db, data) => {
+    let accts = data.accounts;
+    let acct_list = [];
+    for (let a in accts) {
+        a = parseInt(a);
+        let acct = accts[a];
+        acct.number = a;
+        acct_list.push(acct);
+    }
+    let n = 1;
+    for (let t of data.ledger) {
+        t.date = new LDate(t.date);
+        t.number = n++;
+    }
+    let p1 = db.put("accounts", 1, ...acct_list);
+    let p2 = db.put("ledger", 1, ...data.ledger);
+    await p1;
+    return p2;
 }

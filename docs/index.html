@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="shortcut icon" type="image/svg+xml" href="favicon.svg" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=add,menu,check,close,delete" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=add,home,check,close,delete,file_export,more_vert" />
 <link rel="stylesheet" href="style.css" />
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script type="text/javascript" src="idb.js"></script>
@@ -20,43 +20,87 @@
 </script>
 </head>
 <body>
-    <span id="Buttons" class="Right">
+    <span id="Buttons">
         <button data-action="plus_btn" title="New Transaction"><span class="material-symbols-outlined">add</span></button>
-        <button data-action="menu_btn" title="Menu"><span class="material-symbols-outlined">menu</span></button>
+        <button data-action="menu_btn" title="More Actions"><span class="material-symbols-outlined">more_vert</span></button>
     </span>
     <main>
-        <p>Please choose one of the following ledger databases:</p>
-        <ul id="Welcome"></ul>
+        <h2 class="Center Blue" style="margin-bottom:0.25em">Simple Ledger</h2>
+        <p class="Center"><a class="Link" href="https://github.com/dmaccarthy/simple_ledger" target="GitHub">Project Details on Github</a></p>
+        <p class="Center" style="margin:2em auto"><img src="favicon.svg" style="width:10em" alt="Logo"/></p>
+        <div class="Overline AutoCenter em28">
+            <p class="Also">The following ledgers are available in your browser’s storge:</p>
+            <ul class="Also" id="Welcome"></ul>
+            <input id="Import_JSON" type="file" class="Hidden" accept=".json" oninput="import_json()"/>
+            <p>You can <span class="Also">also</span> create a <span class="Link" onclick="new_ledger()">new ledger</span> or import a previously <span class="Link" onclick="$('#Import_JSON').click()">saved ledger</span>.</p>
+        </div>
     </main>
     <div id="Cover"></div>
     <div id="Dialogs">
+    <section id="Edit_Date">
+        <h2 class="Center">Report Dates</h2>
+        <p class="hpad1"><input type="date"/>&nbsp; &ndash; &nbsp;<input type="date"/></p>
+        <p class="Buttons">
+            <button data-action="edit_date"><span class="material-symbols-outlined">check</span><br/>Save<br/>Changes</button>
+            <button data-action="go_main"><span class="material-symbols-outlined">close</span><br/>Cancel<br/>Changes</button>
+        </p>
+    </section>
 
-<section id="Edit_Date">
-    <h2 class="Center">Report Dates</h2>
-    <p class="hpad1"><input type="date"/>&nbsp; &ndash; &nbsp;<input type="date"/></p>
-    <p class="Buttons">
-        <button data-action="edit_date"><span class="material-symbols-outlined">check</span><br/>Save<br/>Changes</button>
-        <button data-action="go_main"><span class="material-symbols-outlined">close</span><br/>Cancel<br/>Changes</button>
-    </p>
-</section>
+    <section id="Tran_New">
+        <h2 class="Center">Edit Transaction</h2>
+        <p><input type="text" placeholder="Description" class="em32"/> <span class="Right" style="padding-left:2em"><input type="date"/></span></p>
+        <table>
+            <thead><tr><th>Account</th><th title="Increase Asset, Expense">Debit</th><th title="Increase Liability, Income">Credit</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <p class="Buttons">
+            <button data-action="add_split"><span class="material-symbols-outlined">add</span><br/>Add<br/>Split</button>
+            <button data-action="edit_tran"><span class="material-symbols-outlined">check</span><br/>Save<br/>Changes</button>
+            <button data-action="go_main"><span class="material-symbols-outlined">close</span><br/>Cancel<br/>Changes</button>
+            <button data-action="del_tran"><span class="material-symbols-outlined">delete</span><br/>Delete<br/>Transaction</button>
+        </p>
+    </section>
 
-<section id="Tran_New">
-    <input type="number" value="-1" class="Hidden"/>
-    <h2 class="Center">Edit Transaction</h2>
-    <p><input type="text" placeholder="Description" class="em32"/> <span class="Right" style="padding-left:2em"><input type="date"/></span></p>
-    <table>
-        <thead><tr><th>Account</th><th title="Increase Asset, Expense">Debit</th><th title="Increase Liability, Income">Credit</th></tr></thead>
-        <tbody></tbody>
-    </table>
-    <p class="Buttons">
-        <button data-action="add_split"><span class="material-symbols-outlined">add</span><br/>Add<br/>Split</button>
-        <button data-action="edit_tran"><span class="material-symbols-outlined">check</span><br/>Save<br/>Changes</button>
-        <button data-action="go_main"><span class="material-symbols-outlined">close</span><br/>Cancel<br/>Changes</button>
-        <button data-action="del_tran"><span class="material-symbols-outlined">delete</span><br/>Delete<br/>Transaction</button>
-    </p>
-</section>
+    <section id="Acct_Edit">
+        <h2 class="Center"></h2>
+        <p class="Center">
+            <label for="Acct_Num">Account #:</label> <input id="Acct_Num" class="em8" type="text"/> &nbsp;
+            <input id="Acct_Auto" type="checkbox" onchange="on_acct_auto(this)"/> <label for="Acct_Auto">Auto Number</label> &nbsp;
+            <input id="Acct_PH" type="checkbox" /> <label for="Acct_PH">Placeholder Account</label>
+        </p>
+        <p class="Center"><select></select> &nbsp; : &nbsp; <input type="text" id="Acct_Name" placeholder="Account Name" class="em24"/></p>
+        <p class="Buttons">
+            <button data-action="edit_acct"><span class="material-symbols-outlined">check</span><br/>Save<br/>Changes</button>
+            <button data-action="go_main"><span class="material-symbols-outlined">close</span><br/>Cancel<br/>Changes</button>
+            <!-- <button data-action="del_acct" disabled="true"><span class="material-symbols-outlined">delete</span><br/>Delete<br/>Account</button> -->
+        </p>
+    </section>
 
+    <section id="Menu">
+        <h2 class="Center">Actions</h2>
+        <p class="Buttons">
+            <button onclick="location.href = location.pathname"><span class="material-symbols-outlined">home</span><br/>Home<br/>&nbsp;</button>
+            <button onclick="db.json(3)"><span class="material-symbols-outlined">file_export</span><br/>Export<br/>Ledger</button>
+            <button data-action="go_main"><span class="material-symbols-outlined">check</span><br/>Done<br/>&nbsp;</button>
+        </p>
+    </section>
+
+    <select onchange="go_main()" id="Acct_Depth" title="Account Depth" class="em6">
+        <option>0</option>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option selected>6</option>
+    </select>
+    <select onchange="go_main()" id="Ledg_Show" title="Transaction Date Filter" class="em10">
+        <option selected>Report Range</option>
+        <option>Show Earlier</option>
+        <option>Show Later</option>
+        <option>Show All</option>
+    </select>
     </div>
-    <section id="PopUp"><p>A</p></section>
+    <section id="PopUp"></section>
 </body>
 </html>
