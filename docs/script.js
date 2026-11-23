@@ -150,7 +150,7 @@ function tran_edit(n) {
             if (opt[j].value == data[r][0]) opt.selectedIndex = j;
         $(tr.children("td")[1]).html(data[r][1] / 100);
     }
-    tran_edit.validate();
+    tran_edit.validate(1);
     dlg.find("input[type=text]").val(tran.descr).focus();
 }
 
@@ -200,14 +200,15 @@ tran_edit.validate = function() {
     }
 }
 
-tran_edit.split = () => {
+tran_edit.split = (validate) => {
     /* Add a new split to the transaction */
     let tbl = $("#Tran_New tbody");
+    tbl.find("tr > td:not(:nth-child(1))").attr({contenteditable: true});
     tr = $("<tr>").appendTo(tbl);
     let sel = db.select(false);
     tr.append($("<td>").html(sel));
     for (let i=0; i<2; i++)
-        tr.append($("<td>").addClass("Right").attr({contenteditable: true}));
+        tr.append($("<td>").addClass("Right"));
     tr.children("td").on("blur", function() {
         let tds = $(this).closest("tr").children("td");
         let i = 0, j;
@@ -218,7 +219,7 @@ tran_edit.split = () => {
         if ($(this).html().length) $(tds[3 - j]).html("");
         tran_edit.validate();
     });
-    tran_edit.validate();
+    if (validate) tran_edit.validate();
     return tr;
 }
 
@@ -232,24 +233,49 @@ tran_edit.del = () => {
 }
 
 function example() {
+    db.acct_new("Retained Earnings", 3);
+
     let n = db.acct_new("Current Assets", 1, 0, 1).number;
     db.acct_new("Chequing", n);
     db.acct_new("Savings", n);
+    n = db.acct_new("Fixed Assets", 1, 0, 1).number;
+    db.acct_new("Car", n);
+
+    db.acct_new("Investments", 1, 0, 1);
+
     db.acct_new("Visa", 2);
-    
+    db.acct_new("Car Loan", 2);
+
+    db.acct_new("Salary", 4, 0, 1).number;
+    db.acct_new("Bank Interest", 4, 0, 1).number;
+
     n = db.acct_new("Food", 5, 0, 1).number;
     db.acct_new("Groceries", n);
     db.acct_new("Restaurant / Delivery", n);
 
-    db.tran_post("2026.11.4", "Safeway", [[50101, 3750], [201, -3750]]);
-    db.tran_post("2026.11.1", "BP's", [[50102, 5200], [201, -5200]]);
+    n = db.acct_new("Transportation", 5, 0, 1).number;
+    db.acct_new("Auto Insurance", n);
+    db.acct_new("Gasoline", n);
+    db.acct_new("Repair & Maintenance", n);
 
-    db.tran_post("2026.1.1", "Opening Entry", [
-        [201, -50000],     // Visa
+    n = db.acct_new("Utilities", 5, 0, 1).number;
+    db.acct_new("Electricity", n);
+    db.acct_new("Natural Gas", n);
+    db.acct_new("Internet & TV", n);
+
+    n = db.acct_new("Financial", 5, 0, 1).number;
+    db.acct_new("Loan Interest", n);
+    db.acct_new("Bank Service Charge", n);
+
+    let data = [
         [10101, 20000],    // Chequing
         [10102, 100000],   // Savings
-        [301, -70000]      // Retained earnings
-    ]);
+        [10201, 1200000],  // Car
+        [202, -850000],    // Car Loan
+        [201, -50000],     // Visa
+        [301, -420000]     // Retained earnings
+    ]; 
+    db.tran_post(new LDate(), "Opening Entry", data);
 
 }
 
@@ -260,8 +286,7 @@ function init(db_name) {
         db.max_depth = $("#Acct_Depth")[0].options.length - 1;
         let dlg = $("#Dialogs").remove();
         db.dialogs = dlg.children();
-        // example();
-
+        if (init.example && db.length == 5) example();
         db.balance_sheet();
 
         $(window).on("click", ev => {
@@ -302,7 +327,9 @@ init.actions = {go_main: go_main, edit_date: edit_date.okay, menu_btn: () => cov
 
 $(() => {
     /* Choose ledger database */
-    let db_name = new URLSearchParams(location.search).get("db");
+    let args = new URLSearchParams(location.search);
+    let db_name = args.get("db");
+    init.example = args.get("example");
     if (db_name) init(db_name);
     else indexedDB.databases().then(dbs => {
         let ul = $("main ul");
@@ -359,9 +386,13 @@ function import_json() {
     reader.readAsText(f); 
 }
 
-function new_ledger() {
+function new_ledger(example) {
     let db_name = prompt("Ledger Name?");
-    if (db_name) location.href = location.pathname + `?db=${db_name.replaceAll(':', '_')}`;
+    if (db_name) {
+        let url = location.pathname + `?db=${db_name.replaceAll(':', '_')}`;
+        if (example) url += "&example=1";
+        location.href = url;
+    }
 }
 
 import_json.load = async(db, data) => {

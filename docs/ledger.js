@@ -54,11 +54,9 @@ static async open(name) {
             if (db._db.upgraded) {
                 let num = 1;
                 for (let name of ["Assets", "Liabilities", "Equity", "Income", "Expenses"]) {
-                    accts[num] = {number: num, name: name, path: [num], subacct: (num == 3 ? [301] : [])};
+                    accts[num] = {number: num, name: name, path: [num], subacct: []};
                     db.put("accounts", 0, accts[num++]);
                 }
-                accts[301] = {name: "Retained Earnings", number: 301, path: [3, 301]};
-                db.put("accounts", 0, accts[301]);
             }
             return db;
         });
@@ -139,6 +137,12 @@ static _renumber(data, args) {
 
 get date3() {return new LDate(this.date2).add(-24).str()}
 set date3(d) {this.date2 = new LDate(d).add(24).str()}
+
+get length() {
+    let i = 0;
+    for (let a in this.accounts) i++;
+    return i;
+}
 
 date_index(date) {
     date = date == null ? new LDate() : new LDate(date);
@@ -429,6 +433,6 @@ income_statement(sel) {
 
 
 Ledger.prefix = "simple-ledger";
-Ledger.version = "0.1.2-dev";
+Ledger.version = "0.1.3-dev";
 
 console.log(`Simple Ledger v${Ledger.version}`);

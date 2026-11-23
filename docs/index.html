@@ -32,7 +32,7 @@
             <p class="Also">The following ledgers are available in your browser’s storge:</p>
             <ul class="Also" id="Welcome"></ul>
             <input id="Import_JSON" type="file" class="Hidden" accept=".json" oninput="import_json()"/>
-            <p>You can <span class="Also">also</span> create a <span class="Link" onclick="new_ledger()">new ledger</span> or import a previously <span class="Link" onclick="$('#Import_JSON').click()">saved ledger</span>.</p>
+            <p>You can <span class="Also">also</span> create a new <span class="Link" onclick="new_ledger()">blank ledger</span> or the <span class="Link" onclick="new_ledger(1)">example ledger</span>, or import a previously <span class="Link" onclick="$('#Import_JSON').click()">saved ledger</span>.</p>
         </div>
     </main>
     <div id="Cover"></div>
