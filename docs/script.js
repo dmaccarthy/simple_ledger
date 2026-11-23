@@ -136,7 +136,8 @@ function tran_edit(n) {
     /* Edit a new or existing transaction */
     let a = db.page.split('-');
     a = a.length > 1 ? parseInt(a[1]) : 0;
-    let tran = n == null ? {date: LDate.today(), descr: "", data: [[a, 1000], [a, -1000]]} : db.ledger[db.index_of(n)];
+    let amt = 100 * (a == 0 ? 1 : db.isdebit(a));
+    let tran = n == null ? {date: LDate.today(), descr: "", data: [[a, amt], [a, -amt]]} : db.ledger[db.index_of(n)];
     cover("#Tran_New");
     let dlg = $("#Tran_New").attr("data-info", n == null ? -1 : n);
     dlg.find("tbody").html("");
@@ -172,7 +173,7 @@ tran_edit.okay = () => {
 }
 
 let td_amt = td => {
-    let amt = parseFloat($(td).text().replaceAll(' ', '').replace('$', ''));
+    let amt = parseFloat($(td).text().replace(/[^\d\.]/g, ''));
     return isNaN(amt) ? 0 : Math.round(100 * amt);
 }
 
