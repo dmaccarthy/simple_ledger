@@ -124,12 +124,11 @@ acct_edit.okay = () => {
 function on_acct_auto(e) {$("#Acct_Num")[0].disabled = e.checked}
 
 function click_acct(num) {
-    // if ((mod & 6) == 6) {
-    //     if (num > 5) acct_delete(num);
-    // }
-    // else if ((mod & 2) == 2) acct_edit(num);
-    // else 
-    if (db.accounts[num].subacct == null) db.acct_ledger(num);
+    let acct = db.accounts[num]
+    if (acct.subacct == null) {
+        db.from_report = acct.path[0];
+        db.acct_ledger(num);
+    }
     else acct_edit(num, 1);
 }
 

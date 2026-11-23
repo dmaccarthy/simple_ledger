@@ -322,12 +322,15 @@ static money(b) {
 
 acct_ledger(n, sel) {
     /* Display an account ledger */
-    let bal = this.page == "bal";
     let show = db.dialogs.filter("#Ledg_Show");
+    let back_bal = this.from_report < 4;
 
-    let s = $("<span>").html(this.long_name(n)).on("click",
-        bal ? ev => db.balance_sheet() : ev => db.income_statement());
-    s.addClass("Link").attr({title: "Back to " + (bal ? "Balance Sheet" : "Income Statement")});
+    let top = this.accounts[n].path[0];
+    let s = $("<span>").html(this.long_name(n)).on("click", () => {
+        if (back_bal) db.balance_sheet();
+        else db.income_statement();
+    });
+    s.addClass("Link").attr({title: "Back to " + (back_bal ? "Balance Sheet" : "Income Statement")});
 
     let h2 = $("<h2>").html(s);
     s = $("<span>").addClass("Right").appendTo(h2);;
@@ -342,7 +345,7 @@ acct_ledger(n, sel) {
         $("<th>").html(th).appendTo(tr);
     tr.append();
     tbl = $("<tbody>").appendTo(tbl);
-    bal = 0;
+    let bal = 0;
     let m = Ledger.money;
     let [d1, d2] = [new LDate(this.date1), new LDate(this.date2)];
     for (let i=0; i<this.ledger.length; i++) {
@@ -351,13 +354,14 @@ acct_ledger(n, sel) {
         for (let [a, d] of t.data) if (a == n) amt = amt == null ? d : d + amt;
         if (amt != null) {
             let timing = t.date < d1 ? 1 : (t.date > d2 ? 2 : 0);
+            amt *= this.isdebit(n);
             if (timing == 0 || (timing & show)) {
-                tr = $("<tr>").appendTo(tbl).attr({"data-number": t.number, title: "Edit Transaction"});
-                amt *= this.isdebit(n);
                 bal += amt;
+                tr = $("<tr>").appendTo(tbl).attr({"data-number": t.number, title: "Edit Transaction"});
                 for (let td of [new LDate(t.date).str(), t.descr, m(amt), m(bal)])
                     $("<td>").html(td).appendTo(tr);
             }
+            else if (top < 4) bal += amt;
         }
     }
     this.page = `ledg-${n}`;
