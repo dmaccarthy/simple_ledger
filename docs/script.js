@@ -96,8 +96,8 @@ function acct_edit(num, create_sub) {
 
 acct_edit.del = () => {
     let num = $("#Acct_Num").val();
-    console.log(num);
-    alert("This feature has not yet been implemented!");
+    db.acct_delete(num);
+    go_main();
 }
 
 acct_edit.okay = () => {
@@ -182,7 +182,7 @@ tran_edit.okay = () => {
 }
 
 let td_amt = td => {
-    let amt = parseFloat($(td).text().replace(/[^\d\.]/g, ''));
+    let amt = parseFloat($(td).text().replace(/[^-\d\.]/g, ''));
     return isNaN(amt) ? 0 : Math.round(100 * amt);
 }
 
@@ -239,6 +239,46 @@ tran_edit.del = () => {
         db.ledger.splice(db.index_of(num), 1);
         go_main();
     }
+}
+
+function yearend() {
+    /* */
+    if (!confirm(`Export year-end balances as of ${new LDate(db.date3).str()}?`)) return;
+    let accts =  db.accounts;
+    let bal = db.balances();
+    let retained;
+    let json = {accounts: {...accts}, ledger: [], "simple-ledger": Ledger.version};
+    let sum = 0;
+    for (let num in bal) {
+        num = parseInt(num);
+        let acct = accts[num];
+        let top = acct.path[0];
+        if (top < 4 && acct.subacct == null) {
+            sum += bal[num];
+            if (top == 3) if (acct.name == "Retained Earnings") retained = num;
+        }
+    }
+    try {
+        if (sum) {
+            if (!retained) retained = parseInt(prompt("Please enter a 'Retained Earnings' account number.", 301));
+            if (retained && bal[retained] != null && accts[retained].subacct == null)
+                bal[retained] -= sum;
+        }
+        let data = [];
+        for (let num in bal) {
+            num = parseInt(num);
+            let acct = accts[num];
+            let top = acct.path[0];
+            if (top < 4 && acct.subacct == null)  data.push([num, bal[num]]);
+        }
+        console.log(data);
+        json.ledger.push({date: new LDate(db.date3), descr: "Opening Entry", data: data});
+        Ledger.save_json(json, db.name + "-newyear.json");
+    } catch(err) {
+        console.log(err);
+        alert("Unable to create Opening Entry!");
+    }
+    go_main();
 }
 
 function example() {
@@ -331,7 +371,7 @@ function init(db_name) {
 
 init.actions = {go_main: go_main, edit_date: edit_date.okay, menu_btn: () => cover("#Menu"), edit_acct: acct_edit.okay,
     plus_btn: () => tran_edit(), edit_tran: tran_edit.okay, add_split: tran_edit.split, del_tran: tran_edit.del,
-    del_acct: acct_edit.del,
+    del_acct: acct_edit.del, export : () => {db.json(3); go_main()}, yearend: yearend,
 };
 
 

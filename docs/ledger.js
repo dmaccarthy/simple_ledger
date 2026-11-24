@@ -73,6 +73,13 @@ constructor(db) {
 
 get name() {return this._db.name.split(':')[1]}
 
+static save_json(data, fn) {
+    if (typeof(data) != "string") data = JSON.stringify(data);
+    let url = URL.createObjectURL(new Blob([data], {"type": "application/json"}));
+    $("<a>").attr({href: url, download: fn})[0].click();
+    URL.revokeObjectURL(url);
+}
+
 json(mode, ...args) { // 0 = Original Object, 1 = Processed Object, 2 = JSON string, 3 = Download JSON
     let renum = mode == 3 && args.length > 0;
     let fn = `${this.name}${renum ? '-renumbered' : ''}.json`;
@@ -95,9 +102,10 @@ json(mode, ...args) { // 0 = Original Object, 1 = Processed Object, 2 = JSON str
         if (mode > 1) {
             data = JSON.stringify(data);
             if (mode == 3) {
-                let url = URL.createObjectURL(new Blob([data], {"type": "application/json"}));
-                $("<a>").attr({href: url, download: fn})[0].click();
-                URL.revokeObjectURL(url);
+                Ledger.save_json(data, fn);
+                // let url = URL.createObjectURL(new Blob([data], {"type": "application/json"}));
+                // $("<a>").attr({href: url, download: fn})[0].click();
+                // URL.revokeObjectURL(url);
             }
         }
     }
@@ -200,6 +208,20 @@ acct_can_delete(num) {
     }
     else can_delete = acct.subacct.length == 0;
     return can_delete;
+}
+
+acct_delete(num) {
+    if (this.acct_can_delete(num)) {
+        let p = this.accounts[num].path;
+        p = p[p.length - 2];
+        if (p) {
+            p = this.accounts[p].subacct;
+            p.splice(p.indexOf(num), 1);
+        }
+        delete this.accounts[num];
+        this.del("accounts", num);
+    }
+    else throw(`unable to delete account: ${num}`);
 }
 
 display_name(num) {

@@ -7,12 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="shortcut icon" type="image/svg+xml" href="favicon.svg" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=add,home,check,close,delete,file_export,more_vert,account_tree" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=add,home,check,close,delete,file_export,more_vert,account_tree,event_upcoming" />
 <link rel="stylesheet" href="style.css?v=20261122" />
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script type="text/javascript" src="idb.js?v=20261124"></script>
-<script type="text/javascript" src="ledger.js?v=20261124"></script>
-<script type="text/javascript" src="script.js?v=20261124"></script>
+<script type="text/javascript" src="ledger.js?v=20261124a"></script>
+<script type="text/javascript" src="script.js?v=20261124a"></script>
 
 <script type="text/javascript">
 
@@ -81,8 +81,11 @@
         <p class="Buttons">
             <button onclick="location.href = location.pathname"><span class="material-symbols-outlined">home</span><br/>Home<br/>&nbsp;</button>
             <button onclick="db.show_acct_numbers = !db.show_acct_numbers; go_main()"><span class="material-symbols-outlined">account_tree</span><br/>Toggle<br/>Account #</button>
-            <button onclick="db.json(3); go_main()"><span class="material-symbols-outlined">file_export</span><br/>Export<br/>Ledger</button>
-            <!-- <button data-action="go_main"><span class="material-symbols-outlined">check</span><br/>Done<br/>&nbsp;</button> -->
+            <button data-action="export"><span class="material-symbols-outlined">file_export</span><br/>Export<br/>Ledger</button>
+            <button data-action="yearend"><span class="material-symbols-outlined">event_upcoming</span><br/>Year<br/>End</button>
+        </p>
+        <p class="Buttons">
+            <button data-action="go_main"><span class="material-symbols-outlined">close</span><br/>Close<br/>&nbsp;</button>
         </p>
     </section>
 
