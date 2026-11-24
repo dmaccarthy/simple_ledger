@@ -54,12 +54,12 @@ edit_date.okay = () => {
     go_main();
 }
 
-function acct_edit(acct, create_sub) {
+function acct_edit(num, create_sub) {
     create_sub = create_sub == true;
-    let depth_limit = db.accounts[acct].path.length >= (db.max_depth - 1) && create_sub;
+    let depth_limit = db.accounts[num].path.length >= (db.max_depth - 1) && create_sub;
     let id = "#Acct_Edit", parent;
     cover(id);
-    let dlg = $(id).attr("data-info", `${acct},${create_sub ? 1 : 0}`);
+    let dlg = $(id).attr("data-info", `${num},${create_sub ? 1 : 0}`);
     let anum = $("#Acct_Num");
     dlg.children("h2").html(create_sub ? "New Sub-Account": "Edit Account");
     let sel = db.select(true).attr({title: "Parent Account"})[0];
@@ -69,16 +69,17 @@ function acct_edit(acct, create_sub) {
     ph.disabled = !create_sub || depth_limit;
 
     if (create_sub) {
-        parent = acct;
-        acct = db.acct_autonum(parent);
+        parent = num;
+        num = db.acct_autonum(parent);
+        // acct = db.accounts[num];
         $("#Acct_Name").val("");
     }
     else {
-        let a = db.accounts[acct];
-        let p = a.path;
+        let acct = db.accounts[num];
+        let p = acct.path;
         parent = p[p.length - 2];
-        $("#Acct_Name").val(a.name);
-        ph.checked = a.subacct != null;
+        $("#Acct_Name").val(acct.name);
+        ph.checked = acct.subacct != null;
     }
     if (depth_limit) ph.checked = false;
 
@@ -88,7 +89,15 @@ function acct_edit(acct, create_sub) {
     let auto = $("#Acct_Auto")[0];
     anum[0].disabled = auto.checked = true;
     auto.disabled = !create_sub;
-    anum.val(acct);
+    anum.val(num);
+
+    $("#Btn_Delete").attr({disabled: !db.acct_can_delete(num)});
+}
+
+acct_edit.del = () => {
+    let num = $("#Acct_Num").val();
+    console.log(num);
+    alert("This feature has not yet been implemented!");
 }
 
 acct_edit.okay = () => {
@@ -286,7 +295,7 @@ function init(db_name) {
         db.max_depth = $("#Acct_Depth")[0].options.length - 1;
         let dlg = $("#Dialogs").remove();
         db.dialogs = dlg.children();
-        if (init.example && db.length == 5) example();
+        if (init.example && db.length == 5 && db.ledger.length == 0) example();
         db.balance_sheet();
 
         $(window).on("click", ev => {
@@ -322,6 +331,7 @@ function init(db_name) {
 
 init.actions = {go_main: go_main, edit_date: edit_date.okay, menu_btn: () => cover("#Menu"), edit_acct: acct_edit.okay,
     plus_btn: () => tran_edit(), edit_tran: tran_edit.okay, add_split: tran_edit.split, del_tran: tran_edit.del,
+    del_acct: acct_edit.del,
 };
 
 

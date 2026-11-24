@@ -68,6 +68,7 @@ constructor(db) {
     super(db);
     this.date1 = new LDate().month(0);
     this.date2 = new LDate().month(1);
+    this.show_acct_numbers = false;
 }
 
 get name() {return this._db.name.split(':')[1]}
@@ -185,6 +186,24 @@ acct_valid(parent, number) {
     if (accts[parent] == null) return;
     if (!number || number < 100) number = this.acct_autonum(parent);
     return number;
+}
+
+acct_can_delete(num) {
+    let acct = this.accounts[num];
+    let can_delete = false;
+    if (acct.subacct == null) {
+        can_delete = true;
+        for (let i=0; can_delete && i<this.ledger.length; i++) {
+            let t = this.ledger[i];
+            for (let [n, d] of t.data) if (n == num) can_delete = false;
+        }
+    }
+    else can_delete = acct.subacct.length == 0;
+    return can_delete;
+}
+
+display_name(num) {
+    return (this.show_acct_numbers ? `${num} – ` : "") + this.accounts[num].name;
 }
 
 long_name(num) {
@@ -387,7 +406,7 @@ print_bal(sel, nums, level) {
     let net = -(bals[4] + bals[5]);
     for (let n of nums) {
         let acct = accts[n];
-        let p = line(acct.name, n, bals[n] * this.isdebit(n), level, acct.subacct != null);
+        let p = line(this.display_name(n), n, bals[n] * this.isdebit(n), level, acct.subacct != null);
         if (n == 3) { // Equity
             let eq = bals[1] + bals[2];
             p.children("span.Right").replaceWith(Ledger.money(eq));
